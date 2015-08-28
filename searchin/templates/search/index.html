@@ -1,0 +1,41 @@
+{% extends '_base.html' %}
+{% block title %}主页{% endblock %}
+{% block content %}
+            <div class="row">
+                <br />
+                <br />
+                <br />
+                <br />
+            </div>
+            <div class="row">
+                <div class="col-md-6 col-md-offset-3">
+                    <form class="form-horizontal" action="javascript:void(0)">
+                        <div class="form-group">
+                            <label class="sr-only" for="search-key">关键词</label>
+                            <div class="col-md-10">
+                                <input type="text" class="form-control" id="search-input" placeholder="请输入关键词…" />
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" class="btn btn-default" id="search-button">搜索</button>
+                            </div>
+                        </div>
+                    </form>
+                    
+                </div>
+                <div class="clearfix"></div>
+                <hr />
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="list-group" id="paper-search-result"></div>
+                </div>
+                <div class="col-md-6">
+                    <div class="list-group" id="book-search-result"></div>
+                </div>
+            </div>
+
+{% endblock %}
+{% block script %}
+    <script src="{{ url_for('static', filename='script.js') }}"></script>>
+{% endblock %}
