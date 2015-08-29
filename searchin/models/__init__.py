@@ -1,1 +1,1 @@
-from .item import Manufacturer, Product, Question, Answer, ProductQuestion, ProductAnswer
+from .search import Paper, Book

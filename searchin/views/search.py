@@ -41,6 +41,14 @@ def get_book_search_result_json(key):
     # return jsonify(key=key, count=len(books_dict), books=books_dict)
 
 
+from ..tasks import add
+
+@search.route('/task/')
+def test_task():
+    result = add.delay(1, 1)
+    return str(result)
+
+
 def load_papers(key):
     papers = mongo.db.papers.find({'title': {'$regex': key}}, {'_id': False})
     print papers.count()
