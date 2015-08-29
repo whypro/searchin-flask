@@ -10,4 +10,4 @@ home = Blueprint('home', __name__)
 
 @home.route('/')
 def index():
-    return 'string'
+    return redirect(url_for('search.show_search'))
