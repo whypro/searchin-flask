@@ -62,7 +62,7 @@ function search() {
             var publisher = books[i]["publisher"];
             var pubdate = books[i]["pubdate"];
             var pages = books[i]["pages"];
-            var isbn13 = books[i]["isbn13"];
+            var isbn = books[i]["isbn"];
             var price = books[i]["price"];
             var summary = books[i]["summary"];
             var click_num = books[i]["click_num"];
@@ -78,7 +78,7 @@ function search() {
                 '        出版社：'+publisher+'<br />'+
                 '        出版时间：'+pubdate+'<br />'+
                 '        页数：'+pages+'<br />'+
-                '        ISBN: '+isbn13+'<br />'+
+                '        ISBN: '+isbn+'<br />'+
                 '        定价：'+price+'<br />'+
                 '        点击量：'+click_num+'<br />'+
                 '        摘要：'+summary.slice(0, 120)+'……'+

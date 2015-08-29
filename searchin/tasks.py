@@ -52,9 +52,13 @@ def _fetch_papers(url, area, page=1):
     if page < Config.MAX_CRAWL_PAGE:
         parser = etree.HTMLParser()
         tree = etree.parse(StringIO(response.text), parser)
-        next_page = tree.xpath('//p[@id="page"]/a[last()]/@href')[0]
-        next_url = urljoin(url, next_page)
-        return papers + list(_fetch_papers(next_url, area, page+1))
+        _next_page = tree.xpath('//p[@id="page"]/a[last()]/@href')
+        if _next_page:
+            next_page = _next_page[0]
+            next_url = urljoin(url, next_page)
+            return papers + list(_fetch_papers(next_url, area, page+1))
+        else:
+            return papers
     else:
         return papers
 
@@ -130,8 +134,8 @@ def _parse_book(text, url):
     response = requests.get(url_template.format(isbn=isbn))
 
     book_dict = json.loads(response.text, encoding='utf-8')
-    book_dict['douban_id'] = book_dict.pop('id')
-    book_dict['douban_api_url'] = book_dict.pop('url')
+    book_dict['douban_id'] = book_dict.pop('id', '')
+    book_dict['douban_api_url'] = book_dict.pop('url', '')
     book_dict['isbn'] = isbn
     book_dict['url'] = url
     book_dict['click_num'] = 0
