@@ -4,6 +4,7 @@ import json
 from flask import Blueprint, render_template, g, jsonify, Response
 
 from ..extensions import mongo
+from ..tasks import crawl_papers, crawl_books
 
 
 search = Blueprint('search', __name__, url_prefix='/search')
@@ -16,6 +17,9 @@ def show_paper_search():
 
 @search.route('/paper/json/<key>/')
 def get_paper_search_result_json(key):
+    # active celery crawl task
+    crawl_papers.delay(key)
+
     papers_cursor = load_papers(key)
     # convert pymongo cursor to dict
     papers_dict = [p for p in papers_cursor]
@@ -32,6 +36,9 @@ def show_book_search():
 
 @search.route('/book/json/<key>/')
 def get_book_search_result_json(key):
+    # active celery crawl task
+    crawl_books.delay(key)
+
     books_cursor = load_books(key)
     # convert pymongo cursor to dict
     books_dict = [b for b in books_cursor]
