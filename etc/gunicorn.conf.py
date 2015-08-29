@@ -1,7 +1,7 @@
 # coding: utf-8
 
-import gevent.monkey
-gevent.monkey.patch_all()
+#import gevent.monkey
+#gevent.monkey.patch_all()
 import multiprocessing
 
 #bind = 'unix:/var/run/ibati.sock'
@@ -10,7 +10,7 @@ max_requests = 100
 keepalive = 5
 
 workers = multiprocessing.cpu_count() * 2 + 1
-worker_class = 'gunicorn.workers.ggevent.GeventWorker'
+#worker_class = 'gunicorn.workers.ggevent.GeventWorker'
 
 loglevel = 'info'
 errorlog = '-'
