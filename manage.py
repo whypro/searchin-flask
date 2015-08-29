@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import subprocess
 
 from flask.ext.script import Manager, Server
-from flask.ext.migrate import  MigrateCommand
+#from flask.ext.migrate import MigrateCommand
 
 from searchin import create_app
 from searchin import config
@@ -15,8 +15,8 @@ from searchin import config
 app = create_app(config.Config)
 
 manager = Manager(app)
-manager.add_command('db', MigrateCommand)
-# manager.add_command('debug', Server(host='127.0.0.1', port=8080, debug=True))
+#manager.add_command('db', MigrateCommand)
+#manager.add_command('debug', Server(host='127.0.0.1', port=8080, debug=True))
 
 @manager.command
 def debug():
