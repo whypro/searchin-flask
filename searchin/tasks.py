@@ -32,9 +32,9 @@ def crawl_papers(key):
 
     for area_title, href in _parse_paper_areas(response.text):
         url = urljoin(response.url, href)
-        new_papers= _fetch_papers(url, area_title)
-        papers += new_papers
-        save_papers(new_papers)
+        papers += _fetch_papers(url, area_title)
+        # papers += new_papers
+        # save_papers(new_papers)
 
     return papers
 
@@ -54,6 +54,8 @@ def _fetch_papers(url, area, page=1):
     response = requests.get(url)
 
     papers = list(_parse_papers(response.text, area))
+
+    save_papers(papers)
        
     if page < Config.MAX_CRAWL_PAGE:
         parser = etree.HTMLParser()
@@ -111,19 +113,38 @@ def crawl_books(key):
     _set_crawled(key, 'book')
 
     url_template = 'http://61.150.69.38:8080/opac/openlink.php?strSearchType=title&match_flag=forward&historyCount=1&strText={key}&doctype=ALL&with_ebook=on&displaypg=100&showmode=table&sort=CATA_DATE&orderby=desc&dept=ALL'
-    response = requests.get(url_template.format(key=key))
+    
+    books = _fetch_books(url_template.format(key=key))
+
+    return books
+
+
+def _fetch_books(url, page=1):
+    response = requests.get(url)
 
     books = []
 
     for href in _parse_book_list(response.text):
-        url = urljoin(response.url, href)
-        response = requests.get(url)
-        book = _parse_book(response.text, url)
+        book_url = urljoin(response.url, href)
+        response = requests.get(book_url)
+        book = _parse_book(response.text, book_url)
         books.append(book)
 
+    # 保存
     save_books(books)
-
-    return books
+       
+    if page < Config.MAX_CRAWL_PAGE:
+        parser = etree.HTMLParser()
+        tree = etree.parse(StringIO(response.text), parser)
+        _next_page = tree.xpath('//div[@class="numstyle"]/a[text()="下一页"]/@href')
+        if _next_page:
+            next_page = _next_page[0]
+            next_url = urljoin(url, next_page)
+            return books + list(_fetch_books(next_url, page+1))
+        else:
+            return books
+    else:
+        return books
 
 
 def _parse_book_list(text):
