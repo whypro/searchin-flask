@@ -4,6 +4,7 @@ from lxml import etree
 import json
 from StringIO import StringIO
 from urlparse import urljoin
+import datetime
 
 import requests
 from celery import Celery
@@ -19,6 +20,11 @@ celery = Celery('searchin', backend=Config.CELERY_RESULT_BACKEND, broker=Config.
 
 @celery.task
 def crawl_papers(key):
+    if not _is_need_crawl(key, 'paper'):
+        return []
+
+    _set_crawled(key, 'paper')
+
     url_template = 'http://xueshu.baidu.com/s?wd={key}&rsv_bp=0&tn=SE_baiduxueshu_c1gjeupa&ie=utf-8'
     response = requests.get(url_template.format(key=key))
 
@@ -26,9 +32,9 @@ def crawl_papers(key):
 
     for area_title, href in _parse_paper_areas(response.text):
         url = urljoin(response.url, href)
-        papers += _fetch_papers(url, area_title)
-
-    save_papers(papers)
+        new_papers= _fetch_papers(url, area_title)
+        papers += new_papers
+        save_papers(new_papers)
 
     return papers
 
@@ -99,6 +105,11 @@ def _parse_papers(text, area):
 
 @celery.task
 def crawl_books(key):
+    if not _is_need_crawl(key, 'book'):
+        return []
+
+    _set_crawled(key, 'book')
+
     url_template = 'http://61.150.69.38:8080/opac/openlink.php?strSearchType=title&match_flag=forward&historyCount=1&strText={key}&doctype=ALL&with_ebook=on&displaypg=100&showmode=table&sort=CATA_DATE&orderby=desc&dept=ALL'
     response = requests.get(url_template.format(key=key))
 
@@ -158,7 +169,30 @@ def save_books(books):
         db.books.update({'douban_id': book.douban_id}, {'$set': book.__dict__}, upsert=True)
     client.close()
 
+import pytz
 
-@celery.task
-def add(a, b):
-    return a + b
+def _is_need_crawl(key, query_type):
+    client = MongoClient(host=Config.MONGO_HOST, port=Config.MONGO_PORT, tz_aware=True)
+    db = client[Config.MONGO_DBNAME]
+    query = db.queries.find_one({'key': key, 'type': query_type}, {'last_crawl': 1})
+    tz = pytz.timezone('Asia/Shanghai')
+    # print datetime.datetime.now(tz), query['last_crawl']
+    if not query:
+        need_crawl = True
+    elif not 'last_crawl' in query:
+        need_crawl = True
+    elif datetime.datetime.now(tz) - query['last_crawl'] > Config.CRAWL_TIME_DELTA:
+        need_crawl = True
+    else:
+        need_crawl = False
+
+    client.close()
+    return need_crawl
+
+
+def _set_crawled(key, query_type):
+    client = MongoClient(host=Config.MONGO_HOST, port=Config.MONGO_PORT, tz_aware=True)
+    db = client[Config.MONGO_DBNAME]
+    tz = pytz.timezone('Asia/Shanghai')
+    db.queries.update({'key': key, 'type': query_type}, {'$set': {'last_crawl': datetime.datetime.now(tz)}, '$inc': {'count': 1}}, upsert=True)
+    client.close()
