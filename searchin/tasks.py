@@ -5,6 +5,7 @@ import json
 from StringIO import StringIO
 from urlparse import urljoin
 import datetime
+import time
 
 import requests
 from celery import Celery
@@ -164,6 +165,7 @@ def _parse_book(text, url):
 
     url_template = 'https://api.douban.com/v2/book/isbn/{isbn}'
     response = requests.get(url_template.format(isbn=isbn))
+    time.sleep(1)
 
     book_dict = json.loads(response.text, encoding='utf-8')
     book_dict['douban_id'] = book_dict.pop('id', '')
