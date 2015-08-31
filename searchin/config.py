@@ -24,3 +24,5 @@ class Config(object):
     MAX_CRAWL_PAGE = 3
 
     CRAWL_TIME_DELTA = datetime.timedelta(days=1)
+
+    MAX_COUNT_PER_REQ = 10

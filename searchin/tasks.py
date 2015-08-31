@@ -6,6 +6,7 @@ from StringIO import StringIO
 from urlparse import urljoin
 import datetime
 import time
+import pytz
 
 import requests
 from celery import Celery
@@ -192,7 +193,6 @@ def save_books(books):
         db.books.update({'douban_id': book.douban_id}, {'$set': book.__dict__}, upsert=True)
     client.close()
 
-import pytz
 
 def _is_need_crawl(key, query_type):
     client = MongoClient(host=Config.MONGO_HOST, port=Config.MONGO_PORT, tz_aware=True)
