@@ -103,7 +103,7 @@ function show_papers(data)
         $("#paper-search-result").append(
             '<div class="list-group-item text-right">'+
             '    <h4 class="list-group-item-heading">'+
-            '        <a href="'+url+'" target="_blank">'+title+'</a>'+
+            '        <a href="'+'/redirect/?type=paper&url='+url+'" target="_blank">'+title+'</a>'+
             '    </h4>'+
             '    <p class="list-group-item-text">'+
             '        关键词：'+key_words.join(", ")+'<br />'+
@@ -142,7 +142,7 @@ function show_books(data)
         $("#book-search-result").append(
             '<div class="list-group-item text-left">'+
             '    <h4 class="list-group-item-heading">'+
-            '        <a href="'+url+'" target="_blank">'+title+'</a>'+
+            '        <a href="'+'/redirect/?type=book&url='+url+'" target="_blank">'+title+'</a>'+
             '    </h4>'+
             '    <p class="list-group-item-text">'+
             '        <img src="'+image+'" class="pull-right" height="120px" />'+

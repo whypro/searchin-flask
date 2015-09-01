@@ -15,6 +15,7 @@ from pymongo import MongoClient
 
 from .config import Config
 from .models import Paper, Book
+from .algorithm import calculate_relevancy
 
 
 celery = Celery('searchin', backend=Config.CELERY_RESULT_BACKEND, broker=Config.CELERY_BROKER_URL)
@@ -45,7 +46,7 @@ def _parse_paper_areas(text):
     """解析【领域】"""
     parser = etree.HTMLParser()
     tree = etree.parse(StringIO(text), parser)
-    areas = tree.xpath('//div[@class="leftnav_list leftnav_list_show"]/div/a')
+    areas = tree.xpath('//a[@data-key="sc_c0"]')
     for area in areas:
         area_title = area.xpath('@title')[0].strip()
         href = area.xpath('@href')[0]
@@ -89,9 +90,10 @@ def _parse_papers(text, area):
         authors = item.xpath('div[@class="sc_content"]/div[@class="sc_info"]/span[1]/a')
         journal = item.xpath('div[@class="sc_content"]/div[@class="sc_info"]/a[1]/@title')[0].strip('《').strip('》')
         _year = item.xpath('div[@class="sc_content"]/div[@class="sc_info"]/span[@class="sc_time"]/@data-year')
-        year = _year[0] if _year else ''
+        year = int(_year[0]) if _year else None
         key_words = item.xpath('div[@class="sc_content"]/div[@class="c_abstract"]/p/span/a')
-        cite_num = item.xpath('div[@class="sc_ext"]/div[@class="sc_cite"]//span[@class="sc_cite_num c-gray"]/text()')[0]
+        _cite_num = item.xpath('div[@class="sc_ext"]/div[@class="sc_cite"]//span[@class="sc_cite_num c-gray"]/text()')[0]
+        cite_num = int(_cite_num)
 
         paper = Paper()
         paper.title = title
@@ -103,6 +105,7 @@ def _parse_papers(text, area):
         paper.cite_num = cite_num
         paper.click_num = 0
         paper.area = area
+        paper.relevancy = calculate_relevancy(year=year, cite_num=cite_num, click_num=0)
 
         yield paper
 
@@ -182,7 +185,9 @@ def save_papers(papers):
     client = MongoClient(host=Config.MONGO_HOST, port=Config.MONGO_PORT, tz_aware=True)
     db = client[Config.MONGO_DBNAME]
     for paper in papers:
-        db.papers.update({'url': paper.url}, {'$set': paper.__dict__}, upsert=True)
+        paper_dict = paper.__dict__
+        #paper_dict.pop('relevancy', 0)
+        db.papers.update({'url': paper.url}, {'$set': paper_dict}, upsert=True)
     client.close()
 
 
@@ -190,7 +195,8 @@ def save_books(books):
     client = MongoClient(host=Config.MONGO_HOST, port=Config.MONGO_PORT, tz_aware=True)
     db = client[Config.MONGO_DBNAME]
     for book in books:
-        db.books.update({'douban_id': book.douban_id}, {'$set': book.__dict__}, upsert=True)
+        book_dict = book.__dict__
+        db.books.update({'douban_id': book.douban_id}, {'$set': book_dict}, upsert=True)
     client.close()
 
 
@@ -218,4 +224,15 @@ def _set_crawled(key, query_type):
     db = client[Config.MONGO_DBNAME]
     tz = pytz.timezone('Asia/Shanghai')
     db.queries.update({'key': key, 'type': query_type}, {'$set': {'last_crawl': datetime.datetime.now(tz)}, '$inc': {'count': 1}}, upsert=True)
+    client.close()
+
+
+@celery.task
+def refresh_all_relevancy():
+    client = MongoClient(host=Config.MONGO_HOST, port=Config.MONGO_PORT, tz_aware=True)
+    db = client[Config.MONGO_DBNAME]
+    papers = db.papers.find({})
+    for paper in papers:
+        relevancy = calculate_relevancy(paper['year'], paper['cite_num'], paper['click_num'])
+        db.papers.update({'url': paper['url']}, {'$set': {'relevancy': relevancy}})
     client.close()

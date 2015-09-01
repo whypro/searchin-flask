@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+from __future__ import unicode_literals, division
 import json
 import pytz
 import datetime
@@ -9,6 +9,7 @@ import pymongo
 
 from ..extensions import mongo
 from ..tasks import crawl_papers, crawl_books
+from ..algorithm import calculate_relevancy
 
 
 search = Blueprint('search', __name__, url_prefix='/search')
@@ -63,7 +64,8 @@ def get_book_search_result_json(key):
 
 def load_papers(key, start, count):
     # TODO: 先排序后分页
-    papers = mongo.db.papers.find({'title': {'$regex': key}}, {'_id': False}).sort([('cite_num', pymongo.DESCENDING)]).skip(start).limit(count)
+    papers = mongo.db.papers.find({'title': {'$regex': key}}, {'_id': False}).sort([('relevancy', pymongo.DESCENDING)]).skip(start).limit(count)
+    #papers.skip(start).limit(count)
     # print papers.count()
     return papers
 
@@ -89,3 +91,5 @@ def is_need_crawl(key, query_type):
         need_crawl = False
 
     return need_crawl
+
+
