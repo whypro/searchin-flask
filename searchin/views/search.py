@@ -5,6 +5,7 @@ import pytz
 import datetime
 
 from flask import Blueprint, render_template, g, jsonify, Response, request, current_app, abort
+import pymongo
 
 from ..extensions import mongo
 from ..tasks import crawl_papers, crawl_books
@@ -61,7 +62,8 @@ def get_book_search_result_json(key):
 
 
 def load_papers(key, start, count):
-    papers = mongo.db.papers.find({'title': {'$regex': key}}, {'_id': False}, skip=start, limit=count)
+    # TODO: 先排序后分页
+    papers = mongo.db.papers.find({'title': {'$regex': key}}, {'_id': False}).sort([('cite_num', pymongo.DESCENDING)]).skip(start).limit(count)
     # print papers.count()
     return papers
 

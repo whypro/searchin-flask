@@ -162,13 +162,10 @@ function show_books(data)
 
 
 function search() {
-
+    // $("#search-button").button("loading");
     var key = encodeURIComponent($("#search-input").val().replace(/(\/|\n|\r|\t)/g, ""));
-
     search_papers(key, 0, count_per_req);
-
     search_books(key, 0, count_per_req);
-
 }
 
 
@@ -178,6 +175,8 @@ $(document).ready(function() {
         e.preventDefault();
         $("#paper-search-result").empty();
         $("#book-search-result").empty();
+        $("#paper-more-button").remove();
+        $("#book-more-button").remove();
         search();
     });
 
