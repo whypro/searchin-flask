@@ -177,6 +177,8 @@ $(document).ready(function() {
         $("#book-search-result").empty();
         $("#paper-more-button").remove();
         $("#book-more-button").remove();
+        $("#top-br").remove();
+        $("#bottom-br").remove();
         search();
     });
 
