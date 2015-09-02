@@ -130,13 +130,14 @@ function show_books(data)
         var url = books[i]["url"];
         var title = books[i]["title"];
         var image = books[i]["image"];
-        var authors = books[i]["author"];
+        var authors = books[i]["authors"];
         var publisher = books[i]["publisher"];
-        var pubdate = books[i]["pubdate"];
-        var pages = books[i]["pages"];
+        var year = books[i]["year"];
+        // var pages = books[i]["pages"];
         var isbn = books[i]["isbn"];
         var price = books[i]["price"];
         var summary = books[i]["summary"];
+        // var douban_summary = books[i]["douban_summary"]
         var click_num = books[i]["click_num"];
 
         $("#book-search-result").append(
@@ -145,15 +146,15 @@ function show_books(data)
             '        <a href="'+'/redirect/?type=book&url='+url+'" target="_blank">'+title+'</a>'+
             '    </h4>'+
             '    <p class="list-group-item-text">'+
-            '        <img src="'+image+'" class="pull-right" height="120px" />'+
-            '        作者：'+authors.join(", ")+'<br />'+
+            // '        <img src="'+image+'" class="pull-right" height="120px" />'+
+            '        作者：'+authors+'<br />'+
             '        出版社：'+publisher+'<br />'+
-            '        出版时间：'+pubdate+'<br />'+
-            '        页数：'+pages+'<br />'+
+            '        出版时间：'+year+'<br />'+
+            // '        页数：'+pages+'<br />'+
             '        ISBN: '+isbn+'<br />'+
             '        定价：'+price+'<br />'+
             '        点击量：'+click_num+'<br />'+
-            '        摘要：'+summary.slice(0, 120)+'……'+
+            '        摘要：'+(summary == undefined ? "无" : summary)+
             '    </p>'+
             '</div>'
         );

@@ -5,8 +5,8 @@ import json
 from StringIO import StringIO
 from urlparse import urljoin
 import datetime
-import time
 import pytz
+import re
 
 import requests
 from celery import Celery
@@ -54,6 +54,7 @@ def _parse_paper_areas(text):
 
 
 def _fetch_papers(url, area, page=1):
+    print url
     response = requests.get(url)
 
     papers = list(_parse_papers(response.text, area))
@@ -93,7 +94,10 @@ def _parse_papers(text, area):
         year = int(_year[0]) if _year else None
         key_words = item.xpath('div[@class="sc_content"]/div[@class="c_abstract"]/p/span/a')
         _cite_num = item.xpath('div[@class="sc_ext"]/div[@class="sc_cite"]//span[@class="sc_cite_num c-gray"]/text()')[0]
-        cite_num = int(_cite_num)
+        if '万' in _cite_num:
+            cite_num = int(float(_cite_num.strip('万')) * 10000)
+        else:
+            cite_num = int(_cite_num)
 
         paper = Paper()
         paper.title = title
@@ -125,13 +129,15 @@ def crawl_books(key):
 
 
 def _fetch_books(url, page=1):
+    print url
     response = requests.get(url)
-
+    response.encoding = 'utf-8'
     books = []
 
     for href in _parse_book_list(response.text):
         book_url = urljoin(response.url, href)
         response = requests.get(book_url)
+        response.encoding = 'utf-8'
         book = _parse_book(response.text, book_url)
         books.append(book)
 
@@ -162,23 +168,48 @@ def _parse_book_list(text):
 
 
 def _parse_book(text, url):
+    print url
     parser = etree.HTMLParser()
     tree = etree.parse(StringIO(text), parser)
 
-    isbn = tree.xpath('//div[@id="item_detail"]/dl[3]/dd/text()')[0].split('/')[0].split(' ')[0]
+    # picture = tree.xpath('//img[@id="book_img"]/@src')[0]
 
-    url_template = 'https://api.douban.com/v2/book/isbn/{isbn}'
-    response = requests.get(url_template.format(isbn=isbn))
-    time.sleep(1)
+    book_dict = dict()
+    items = tree.xpath('//div[@id="item_detail"]/dl[@class="booklist"]')
+    for item in items:
+        _dt = item.xpath('dt/text()')
+        # print _dt
+        if not _dt:
+            continue
+        dt = _dt[0].rstrip(':')
+        dd = item.xpath('dd')[0].xpath('string(.)')
+        # print dt, dd
+        if dt not in book_dict:
+            book_dict[dt] = dd
+    # print book_dict
 
-    book_dict = json.loads(response.text, encoding='utf-8')
-    book_dict['douban_id'] = book_dict.pop('id', '')
-    book_dict['douban_api_url'] = book_dict.pop('url', '')
-    book_dict['isbn'] = isbn
-    book_dict['url'] = url
-    book_dict['click_num'] = 0
+    book = Book()
+    # book.image = picture
+    book.click_num = 0
+    book.url = url
+    if '题名/责任者' in book_dict:
+        match = re.search(r'(.*)(\/(.*))?', book_dict['题名/责任者'])
+        book.title = match.group(1)
+        book.authors = match.group(3)
+        # book.title, book.authors = book_dict['题名/责任者'].split('/')
+    if '出版发行项' in book_dict:
+        book.publisher = book_dict['出版发行项'].split(',')[0].split(':')
+        book.year = book_dict['出版发行项'].split(',')[1]
+    if 'ISBN及定价' in book_dict:
+        book.isbn, book.price = book_dict['ISBN及定价'].split('/')
+    if '中图法分类号' in book_dict:
+        book.category_number = book_dict['中图法分类号']
+    if '提要文摘附注' in book_dict:
+        book.summary = book_dict['提要文摘附注']
+    if '豆瓣简介' in book_dict:
+        book.douban_summary = book_dict['豆瓣简介']
 
-    return Book(**book_dict)
+    return book
 
 
 def save_papers(papers):
@@ -196,7 +227,7 @@ def save_books(books):
     db = client[Config.MONGO_DBNAME]
     for book in books:
         book_dict = book.__dict__
-        db.books.update({'douban_id': book.douban_id}, {'$set': book_dict}, upsert=True)
+        db.books.update({'url': book.url}, {'$set': book_dict}, upsert=True)
     client.close()
 
 
