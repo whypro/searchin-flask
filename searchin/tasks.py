@@ -121,7 +121,7 @@ def crawl_books(key):
 
     _set_crawled(key, 'book')
 
-    url_template = 'http://61.150.69.38:8080/opac/openlink.php?strSearchType=title&match_flag=forward&historyCount=1&strText={key}&doctype=ALL&with_ebook=on&displaypg=100&showmode=table&sort=CATA_DATE&orderby=desc&dept=ALL'
+    url_template = 'http://61.150.69.38:8080/opac/openlink.php?strSearchType=title&match_flag=forward&historyCount=1&strText={key}&doctype=ALL&with_ebook=on&displaypg=10&showmode=table&sort=CATA_DATE&orderby=desc&dept=ALL'
     
     books = _fetch_books(url_template.format(key=key))
 
@@ -143,12 +143,14 @@ def _fetch_books(url, page=1):
             books.append(book)
 
     # 保存
+    # print books
     save_books(books)
        
     if page < Config.MAX_CRAWL_PAGE:
         parser = etree.HTMLParser()
         tree = etree.parse(StringIO(response.text), parser)
         _next_page = tree.xpath('//div[@class="numstyle"]/a[text()="下一页"]/@href')
+        # print _next_page
         if _next_page:
             next_page = _next_page[0]
             next_url = urljoin(url, next_page)
