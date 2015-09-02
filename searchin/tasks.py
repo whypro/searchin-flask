@@ -193,7 +193,7 @@ def _parse_book(text, url):
     book.click_num = 0
     book.url = url
     if '题名/责任者' in book_dict:
-        match = re.search(r'(.*)(\/(.*))?', book_dict['题名/责任者'])
+        match = re.search(r'([^\/]*)(\/([^\/]*))?', book_dict['题名/责任者'])
         book.title = match.group(1)
         book.authors = match.group(3)
         # book.title, book.authors = book_dict['题名/责任者'].split('/')
