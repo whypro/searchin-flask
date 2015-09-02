@@ -139,7 +139,8 @@ def _fetch_books(url, page=1):
         response = requests.get(book_url)
         response.encoding = 'utf-8'
         book = _parse_book(response.text, book_url)
-        books.append(book)
+        if book:
+            books.append(book)
 
     # 保存
     save_books(books)
@@ -200,10 +201,18 @@ def _parse_book(text, url):
     if '出版发行项' in book_dict:
         book.publisher = book_dict['出版发行项'].split(',')[0].split(':')
         book.year = book_dict['出版发行项'].split(',')[1]
+
     if 'ISBN及定价' in book_dict:
-        book.isbn, book.price = book_dict['ISBN及定价'].split('/')
+        book.isbn = book_dict['ISBN及定价'].split('/')[0].split(' ')[0]
+        book.price = book_dict['ISBN及定价'].split('/')[1]
+    else:
+        return None
+
     if '中图法分类号' in book_dict:
         book.category_number = book_dict['中图法分类号']
+    else:
+        return None
+
     if '提要文摘附注' in book_dict:
         book.summary = book_dict['提要文摘附注']
     if '豆瓣简介' in book_dict:

@@ -1,5 +1,6 @@
 var count_per_req = 10;
 
+
 function search_papers(key, start, count) {
     var get_paper_search_result_json_url = "/search/paper/json/"+key+"/?start="+start+"&count="+count;
     $.get(get_paper_search_result_json_url, function(data, status) {
@@ -137,7 +138,7 @@ function show_books(data)
         var isbn = books[i]["isbn"];
         var price = books[i]["price"];
         var summary = books[i]["summary"];
-        // var douban_summary = books[i]["douban_summary"]
+        var douban_summary = books[i]["douban_summary"]
         var click_num = books[i]["click_num"];
 
         $("#book-search-result").append(
@@ -146,7 +147,7 @@ function show_books(data)
             '        <a href="'+'/redirect/?type=book&url='+url+'" target="_blank">'+title+'</a>'+
             '    </h4>'+
             '    <p class="list-group-item-text">'+
-            // '        <img src="'+image+'" class="pull-right" height="120px" />'+
+            '        <img class="pull-right" height="120px" />'+
             '        作者：'+authors+'<br />'+
             '        出版社：'+publisher+'<br />'+
             '        出版时间：'+year+'<br />'+
@@ -154,7 +155,8 @@ function show_books(data)
             '        ISBN: '+isbn+'<br />'+
             '        定价：'+price+'<br />'+
             '        点击量：'+click_num+'<br />'+
-            '        摘要：'+(summary == undefined ? "无" : summary)+
+            // '        摘要：'+(summary == undefined ? "无" : summary)+
+            '        摘要：'+(douban_summary == undefined ? "无" : douban_summary)+
             '    </p>'+
             '</div>'
         );
@@ -184,5 +186,3 @@ $(document).ready(function() {
     });
 
 });
-
-
