@@ -30,8 +30,8 @@ def click_redirect():
             mongo.db.papers.update({'url': url}, {'$set': {'relevancy': relevancy}})
             invalid = False
     elif redirect_type == 'book':
-        result = mongo.db.books.update({'url': url}, {'$inc': {'click_num': 1}})
-        if result['nModified']:
+        book = mongo.db.books.find_and_modify({'url': url}, {'$inc': {'click_num': 1}})
+        if book:
             invalid = False
 
     if invalid:
