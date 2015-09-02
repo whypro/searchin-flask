@@ -20,7 +20,7 @@ def show_search():
     return render_template('search/index.html')
 
 
-@search.route('/hot-keys/')
+@search.route('/hot/')
 def show_hot_keys():
     hot_keys = mongo.db.queries.find({}).sort([('count.paper', pymongo.DESCENDING), ('count.book', pymongo.DESCENDING)]).limit(10)
     return render_template('search/hot-keys.html', hot_keys=hot_keys)
@@ -71,6 +71,9 @@ def get_book_search_result_json(key):
 def load_papers(key, start, count):
     # TODO: 先排序后分页
     papers = mongo.db.papers.find({'title': {'$regex': key}}, {'_id': False}).sort([('relevancy', pymongo.DESCENDING)]).skip(start).limit(count)
+    if start == 0:
+        mongo.db.queries.update({'key': key}, {'$inc': {'count.paper': 1}}, upsert=True)
+
     #papers.skip(start).limit(count)
     # print papers.count()
     return papers
@@ -78,6 +81,8 @@ def load_papers(key, start, count):
 
 def load_books(key, start, count):
     books = mongo.db.books.find({'title': {'$regex': key}}, {'_id': False}, skip=start, limit=count)
+    if start == 0:
+        mongo.db.queries.update({'key': key}, {'$inc': {'count.book': 1}}, upsert=True)
     # print books.count()
     return books
 

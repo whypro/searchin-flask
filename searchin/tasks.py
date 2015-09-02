@@ -204,7 +204,10 @@ def _parse_book(text, url):
 
     if 'ISBN及定价' in book_dict:
         book.isbn = book_dict['ISBN及定价'].split('/')[0].split(' ')[0]
-        book.price = book_dict['ISBN及定价'].split('/')[1]
+        try: 
+            book.price = book_dict['ISBN及定价'].split('/')[1]
+        except IndexError:
+            book.price = None
     else:
         return None
 
@@ -244,7 +247,7 @@ def _set_crawled(key, query_type):
     client = MongoClient(host=Config.MONGO_HOST, port=Config.MONGO_PORT, tz_aware=True)
     db = client[Config.MONGO_DBNAME]
     tz = pytz.timezone('Asia/Shanghai')
-    db.queries.update({'key': key}, {'$set': {'last_crawl.'+query_type: datetime.datetime.now(tz)}, '$inc': {'count.'+query_type: 1}}, upsert=True)
+    db.queries.update({'key': key}, {'$set': {'last_crawl.'+query_type: datetime.datetime.now(tz)}}, upsert=True)
     client.close()
 
 
