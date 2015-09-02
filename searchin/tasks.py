@@ -23,8 +23,8 @@ celery = Celery('searchin', backend=Config.CELERY_RESULT_BACKEND, broker=Config.
 
 @celery.task
 def crawl_papers(key):
-    if not _is_need_crawl(key, 'paper'):
-        return []
+    # if not _is_need_crawl(key, 'paper'):
+    #     return []
 
     _set_crawled(key, 'paper')
 
@@ -116,8 +116,8 @@ def _parse_papers(text, area):
 
 @celery.task
 def crawl_books(key):
-    if not _is_need_crawl(key, 'book'):
-        return []
+    # if not _is_need_crawl(key, 'book'):
+    #     return []
 
     _set_crawled(key, 'book')
 
@@ -240,30 +240,11 @@ def save_books(books):
     client.close()
 
 
-def _is_need_crawl(key, query_type):
-    client = MongoClient(host=Config.MONGO_HOST, port=Config.MONGO_PORT, tz_aware=True)
-    db = client[Config.MONGO_DBNAME]
-    query = db.queries.find_one({'key': key, 'type': query_type}, {'last_crawl': 1})
-    tz = pytz.timezone('Asia/Shanghai')
-    # print datetime.datetime.now(tz), query['last_crawl']
-    if not query:
-        need_crawl = True
-    elif not 'last_crawl' in query:
-        need_crawl = True
-    elif datetime.datetime.now(tz) - query['last_crawl'] > Config.CRAWL_TIME_DELTA:
-        need_crawl = True
-    else:
-        need_crawl = False
-
-    client.close()
-    return need_crawl
-
-
 def _set_crawled(key, query_type):
     client = MongoClient(host=Config.MONGO_HOST, port=Config.MONGO_PORT, tz_aware=True)
     db = client[Config.MONGO_DBNAME]
     tz = pytz.timezone('Asia/Shanghai')
-    db.queries.update({'key': key, 'type': query_type}, {'$set': {'last_crawl': datetime.datetime.now(tz)}, '$inc': {'count': 1}}, upsert=True)
+    db.queries.update({'key': key}, {'$set': {'last_crawl.'+query_type: datetime.datetime.now(tz)}, '$inc': {'count.'+query_type: 1}}, upsert=True)
     client.close()
 
 

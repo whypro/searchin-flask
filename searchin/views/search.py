@@ -20,6 +20,12 @@ def show_search():
     return render_template('search/index.html')
 
 
+@search.route('/hot-keys/')
+def show_hot_keys():
+    hot_keys = mongo.db.queries.find({}).sort([('count.paper', pymongo.DESCENDING), ('count.book', pymongo.DESCENDING)]).limit(10)
+    return render_template('search/hot-keys.html', hot_keys=hot_keys)
+
+
 @search.route('/paper/json/<key>/')
 def get_paper_search_result_json(key):
     if is_need_crawl(key, 'paper'):
@@ -78,14 +84,16 @@ def load_books(key, start, count):
 
 
 def is_need_crawl(key, query_type):
-    query = mongo.db.queries.find_one({'key': key, 'type': query_type}, {'last_crawl': 1})
+    query = mongo.db.queries.find_one({'key': key}, {'last_crawl.'+query_type: 1})
     tz = pytz.timezone('Asia/Shanghai')
     # print datetime.datetime.now(tz), query['last_crawl']
     if not query:
         need_crawl = True
     elif not 'last_crawl' in query:
         need_crawl = True
-    elif datetime.datetime.now(tz) - query['last_crawl'] > current_app.config['CRAWL_TIME_DELTA']:
+    elif not query_type in query['last_crawl']:
+        need_crawl = True
+    elif datetime.datetime.now(tz) - query['last_crawl'][query_type] > current_app.config['CRAWL_TIME_DELTA']:
         need_crawl = True
     else:
         need_crawl = False

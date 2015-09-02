@@ -7,6 +7,7 @@ from ..extensions import mongo
 from ..algorithm import calculate_relevancy
 from ..tasks import refresh_all_relevancy
 
+
 home = Blueprint('home', __name__)
 
 
