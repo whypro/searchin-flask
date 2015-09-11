@@ -136,9 +136,9 @@ def _fetch_books(url, page=1):
 
     for href in _parse_book_list(response.text):
         book_url = urljoin(response.url, href)
-        response = requests.get(book_url)
-        response.encoding = 'utf-8'
-        book = _parse_book(response.text, book_url)
+        r = requests.get(book_url)
+        r.encoding = 'utf-8'
+        book = _parse_book(r.text, book_url)
         if book:
             books.append(book)
 
@@ -202,7 +202,10 @@ def _parse_book(text, url):
         # book.title, book.authors = book_dict['题名/责任者'].split('/')
     if '出版发行项' in book_dict:
         book.publisher = book_dict['出版发行项'].split(',')[0].split(':')
-        book.year = book_dict['出版发行项'].split(',')[1]
+        try:
+            book.year = book_dict['出版发行项'].split(',')[1]
+        except IndexError:
+            book.year = None
 
     if 'ISBN及定价' in book_dict:
         book.isbn = book_dict['ISBN及定价'].split('/')[0].split(' ')[0]
@@ -285,9 +288,9 @@ def _fetch_cls_books(url, page=1):
 
     for href in _parse_cls_book_list(response.text):
         book_url = urljoin(response.url, href)
-        response = requests.get(book_url)
-        response.encoding = 'utf-8'
-        book = _parse_book(response.text, book_url)
+        r = requests.get(book_url)
+        r.encoding = 'utf-8'
+        book = _parse_book(r.text, book_url)
         if book:
             books.append(book)
 
@@ -300,7 +303,7 @@ def _fetch_cls_books(url, page=1):
         parser = etree.HTMLParser()
         tree = etree.parse(StringIO(response.text), parser)
         _next_page = tree.xpath('//div[@class="numstyle"]/a[text()="下一页"]/@href')
-        # print _next_page
+        # print 'next_page:', _next_page
         if _next_page:
             next_page = _next_page[0]
             next_url = urljoin(url, next_page)
@@ -309,6 +312,7 @@ def _fetch_cls_books(url, page=1):
             return books
     else:
         return books
+
 
 def _parse_cls_book_list(text):
     parser = etree.HTMLParser()
