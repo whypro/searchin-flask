@@ -5,7 +5,7 @@ from flask import Blueprint, render_template, request, jsonify, redirect, url_fo
 
 from ..extensions import mongo
 from ..algorithm import calculate_relevancy
-from ..tasks import refresh_all_relevancy
+from ..tasks import refresh_all_relevancy, auto_crawl_books
 
 
 home = Blueprint('home', __name__)
@@ -43,4 +43,10 @@ def click_redirect():
 @home.route('/refresh/')
 def refresh():
     refresh_all_relevancy.delay()
+    return redirect(url_for('home.index'))
+
+
+@home.route('/crawl/')
+def crawl():
+    auto_crawl_books.delay()
     return redirect(url_for('home.index'))

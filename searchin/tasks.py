@@ -262,3 +262,58 @@ def refresh_all_relevancy():
         relevancy = calculate_relevancy(paper['year'], paper['cite_num'], paper['click_num'])
         db.papers.update({'url': paper['url']}, {'$set': {'relevancy': relevancy}})
     client.close()
+
+
+@celery.task
+def auto_crawl_books():
+    url_template = 'http://61.150.69.38:8080/browse/cls_browsing_book.php?s_doctype=all&cls={cls}'
+    cls_list = map(lambda x: chr(ord('A')+x), range(0, 26)) # 生成 26 个字母，分类号
+
+    books = []
+
+    for cls in cls_list:
+        books += _fetch_cls_books(url_template.format(cls=cls))
+
+    return books
+
+
+def _fetch_cls_books(url, page=1):
+    print url
+    response = requests.get(url)
+    response.encoding = 'utf-8'
+    books = []
+
+    for href in _parse_cls_book_list(response.text):
+        book_url = urljoin(response.url, href)
+        response = requests.get(book_url)
+        response.encoding = 'utf-8'
+        book = _parse_book(response.text, book_url)
+        if book:
+            books.append(book)
+
+    # 保存
+    # print books
+    save_books(books)
+       
+    if True:
+    # if page < Config.MAX_CRAWL_PAGE:
+        parser = etree.HTMLParser()
+        tree = etree.parse(StringIO(response.text), parser)
+        _next_page = tree.xpath('//div[@class="numstyle"]/a[text()="下一页"]/@href')
+        # print _next_page
+        if _next_page:
+            next_page = _next_page[0]
+            next_url = urljoin(url, next_page)
+            return books + list(_fetch_cls_books(next_url, page+1))
+        else:
+            return books
+    else:
+        return books
+
+def _parse_cls_book_list(text):
+    parser = etree.HTMLParser()
+    tree = etree.parse(StringIO(text), parser)
+    items = tree.xpath('//div[@class="list_books"]')
+    for item in items:
+        href = item.xpath('h3/strong/a/@href')[0]
+        yield href
