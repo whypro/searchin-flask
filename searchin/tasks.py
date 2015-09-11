@@ -248,6 +248,19 @@ def save_books(books):
     client.close()
 
 
+def _book_exists(book_url):
+    client = MongoClient(host=Config.MONGO_HOST, port=Config.MONGO_PORT, tz_aware=True)
+    db = client[Config.MONGO_DBNAME]
+
+    if db.books.find({'url': book_url}).count():
+        ret = True
+    else:
+        ret = False
+
+    client.close()
+    return ret
+
+
 def _set_crawled(key, query_type):
     client = MongoClient(host=Config.MONGO_HOST, port=Config.MONGO_PORT, tz_aware=True)
     db = client[Config.MONGO_DBNAME]
@@ -288,6 +301,8 @@ def _fetch_cls_books(url, page=1):
 
     for href in _parse_cls_book_list(response.text):
         book_url = urljoin(response.url, href)
+        if _book_exists(book_url):
+            continue
         r = requests.get(book_url)
         r.encoding = 'utf-8'
         book = _parse_book(r.text, book_url)
