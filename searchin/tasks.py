@@ -10,6 +10,7 @@ import re
 
 import requests
 from celery import Celery
+from celery.contrib.methods import task
 from pymongo import MongoClient
 # from flask import current_app
 
@@ -282,57 +283,136 @@ def refresh_all_relevancy():
 
 @celery.task
 def auto_crawl_books():
-    url_template = 'http://61.150.69.38:8080/browse/cls_browsing_book.php?s_doctype=all&cls={cls}'
-    cls_list = map(lambda x: chr(ord('A')+x), range(0, 26)) # 生成 26 个字母，分类号
-
-    books = []
-
-    for cls in cls_list:
-        books += _fetch_cls_books(url_template.format(cls=cls))
-
-    return books
+    spider = OPACSpider()
+    spider.auto_crawl()
 
 
-def _fetch_cls_books(url, page=1):
-    print url
-    response = requests.get(url)
-    response.encoding = 'utf-8'
-    books = []
+class OPACSpider(object):
+    """"""
+    cls_view_url_template = 'http://61.150.69.38:8080/browse/cls_browsing_book.php?s_doctype=all&cls={cls}&page={page}'
 
-    for href in _parse_cls_book_list(response.text):
-        book_url = urljoin(response.url, href)
-        if _book_exists(book_url):
-            continue
-        r = requests.get(book_url)
-        r.encoding = 'utf-8'
-        book = _parse_book(r.text, book_url)
-        if book:
-            books.append(book)
+    def __init__(self):
+        self.parser = etree.HTMLParser()
+        self.client = MongoClient(host=Config.MONGO_HOST, port=Config.MONGO_PORT, tz_aware=True)
+        self.db = self.client[Config.MONGO_DBNAME]
 
-    # 保存
-    # print books
-    save_books(books)
-       
-    if True:
-    # if page < Config.MAX_CRAWL_PAGE:
-        parser = etree.HTMLParser()
-        tree = etree.parse(StringIO(response.text), parser)
-        _next_page = tree.xpath('//div[@class="numstyle"]/a[text()="下一页"]/@href')
-        # print 'next_page:', _next_page
-        if _next_page:
-            next_page = _next_page[0]
-            next_url = urljoin(url, next_page)
-            return books + list(_fetch_cls_books(next_url, page+1))
+    def __del__(self):
+        self.client.close()
+
+    @task(ignore_result=True)
+    def auto_crawl(self):
+        cls_list = map(lambda x: chr(ord('A')+x), range(0, 26))     # 生成 26 个字母，分类号 
+        for cls in cls_list:
+            max_page = self.parse_cls_view_max_page(cls)
+            print '{cls}: {max_page}'.format(cls=cls, max_page=max_page)
+            for page in range(1, max_page+1):
+                self.parse_cls_view_list(cls, page)
+
+    def parse_cls_view_max_page(self, cls='A'):
+        cls_view_url = self.cls_view_url_template.format(cls=cls, page=1)
+        response = requests.get(cls_view_url)
+        tree = etree.parse(StringIO(response.text), self.parser)
+        _max_page = tree.xpath('//div[@class="numstyle"]/b/font[@color="black"]/text()')[0]
+        max_page = int(_max_page) if _max_page else 1
+        return max_page
+
+    @task(ignore_result=True)
+    def parse_cls_view_list(self, cls='A', page=1):
+        """
+        解析 url 为 http://61.150.69.38:8080/browse/cls_browsing_book.php?s_doctype=all&cls=A&page=1 的图书列表
+        其中 cls = [A-Z], page = \d*
+        """
+        cls_view_url = self.cls_view_url_template.format(cls=cls, page=page)
+        print cls_view_url
+        response = requests.get(cls_view_url)
+        response.encoding = 'utf-8'
+
+        tree = etree.parse(StringIO(response.text), self.parser)
+        book_items = tree.xpath('//div[@class="list_books"]')
+        for book_item in book_items:
+            href = book_item.xpath('h3/strong/a/@href')[0]
+            book_url = urljoin(response.url, href)
+
+            if self.is_book_exists(book_url):
+                continue
+
+            self.parse_book_detail(book_url)
+
+    @task()
+    def parse_book_detail(self, url):
+        print url
+        response = requests.get(url)
+        response.encoding = 'utf-8'
+        tree = etree.parse(StringIO(response.text), self.parser)
+
+        # picture = tree.xpath('//img[@id="book_img"]/@src')[0]
+
+        book_dict = dict()
+        items = tree.xpath('//div[@id="item_detail"]/dl[@class="booklist"]')
+        for item in items:
+            _dt = item.xpath('dt/text()')
+            # print _dt
+            if not _dt:
+                continue
+            dt = _dt[0].rstrip(':')
+            dd = item.xpath('dd')[0].xpath('string(.)')
+            # print dt, dd
+            if dt not in book_dict:
+                book_dict[dt] = dd
+        # print book_dict
+
+        book = Book()
+        # book.image = picture
+        book.click_num = 0
+        book.url = url
+        if '题名/责任者' in book_dict:
+            match = re.search(r'([^\/]*)(\/([^\/]*))?', book_dict['题名/责任者'])
+            book.title = match.group(1)
+            book.authors = match.group(3)
+            # book.title, book.authors = book_dict['题名/责任者'].split('/')
+        if '出版发行项' in book_dict:
+            book.publisher = book_dict['出版发行项'].split(',')[0].split(':')
+            try:
+                book.year = book_dict['出版发行项'].split(',')[1]
+            except IndexError:
+                book.year = None
+
+        if 'ISBN及定价' in book_dict:
+            book.isbn = book_dict['ISBN及定价'].split('/')[0].split(' ')[0]
+            try: 
+                book.price = book_dict['ISBN及定价'].split('/')[1]
+            except IndexError:
+                book.price = None
         else:
-            return books
-    else:
-        return books
+            return None
 
+        if '中图法分类号' in book_dict:
+            book.category_number = book_dict['中图法分类号']
+        else:
+            return None
 
-def _parse_cls_book_list(text):
-    parser = etree.HTMLParser()
-    tree = etree.parse(StringIO(text), parser)
-    items = tree.xpath('//div[@class="list_books"]')
-    for item in items:
-        href = item.xpath('h3/strong/a/@href')[0]
-        yield href
+        if '提要文摘附注' in book_dict:
+            book.summary = book_dict['提要文摘附注']
+        if '豆瓣简介' in book_dict:
+            book.douban_summary = book_dict['豆瓣简介']
+
+        self.save_books([book])
+        return book
+
+    def is_book_exists(self, url):
+        """检查 url 对应的图书是否存在于数据库中"""
+        if self.db.books.find({'url': url}).count():
+            return True
+        else:
+            return False
+
+    def save_books(self, books):
+        for book in books:
+            book_dict = book.__dict__
+            self.db.books.update({'url': book.url}, {'$set': book_dict}, upsert=True)
+
+    def set_cls_crawled(self, cls):
+        pass
+
+    def is_cls_crawled(self, cls):
+        pass
