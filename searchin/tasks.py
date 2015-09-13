@@ -282,9 +282,9 @@ def refresh_all_relevancy():
 
 
 @celery.task
-def auto_crawl_books():
+def auto_crawl_books(start_cls='A'):
     spider = OPACSpider()
-    spider.auto_crawl()
+    spider.auto_crawl(start_cls=start_cls)
 
 
 class OPACSpider(object):
@@ -300,8 +300,8 @@ class OPACSpider(object):
         self.client.close()
 
     @task(ignore_result=True)
-    def auto_crawl(self):
-        cls_list = map(lambda x: chr(ord('A')+x), range(0, 26))     # 生成 26 个字母，分类号 
+    def auto_crawl(self, start_cls='A'):
+        cls_list = map(lambda x: chr(x), range(ord(start_cls), ord('Z')+1)) # 生成字母分类号 
         for cls in cls_list:
             max_page = self.parse_cls_view_max_page(cls)
             print '{cls}: {max_page}'.format(cls=cls, max_page=max_page)

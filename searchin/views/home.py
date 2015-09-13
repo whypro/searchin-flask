@@ -48,5 +48,6 @@ def refresh():
 
 @home.route('/crawl/')
 def crawl():
-    auto_crawl_books.delay()
+    start_cls = request.args.get('start_cls', 'A')
+    auto_crawl_books.delay(start_cls=start_cls)
     return redirect(url_for('home.index'))
