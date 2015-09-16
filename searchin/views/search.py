@@ -89,6 +89,11 @@ def load_books(key, start, count):
 
 
 def is_need_crawl(key, query_type):
+    if query_type == 'book' and not current_app.config['CRAWL_BOOKS_ONLINE']:
+        return False
+    if query_type == 'paper' and not current_app.config['CRAWL_PAPERS_ONLINE']:
+        return False
+
     query = mongo.db.queries.find_one({'key': key}, {'last_crawl.'+query_type: 1})
     tz = pytz.timezone('Asia/Shanghai')
     # print datetime.datetime.now(tz), query['last_crawl']
