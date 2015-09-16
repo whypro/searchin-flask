@@ -308,16 +308,16 @@ class OPACSpider(object):
             for page in range(1, max_page+1):
                 self.parse_cls_view_list(cls, page)
 
-    def parse_cls_view_max_page(self, cls='A'):
+    def parse_cls_view_max_page(self, cls):
         cls_view_url = self.cls_view_url_template.format(cls=cls, page=1)
         response = requests.get(cls_view_url)
         tree = etree.parse(StringIO(response.text), self.parser)
-        _max_page = tree.xpath('//div[@class="numstyle"]/b/font[@color="black"]/text()')[0]
-        max_page = int(_max_page) if _max_page else 1
+        _max_page = tree.xpath('//div[@class="numstyle"]/b/font[@color="black"]/text()')
+        max_page = int(_max_page[0]) if _max_page else 1
         return max_page
 
     @task(ignore_result=True)
-    def parse_cls_view_list(self, cls='A', page=1):
+    def parse_cls_view_list(self, cls, page):
         """
         解析 url 为 http://61.150.69.38:8080/browse/cls_browsing_book.php?s_doctype=all&cls=A&page=1 的图书列表
         其中 cls = [A-Z], page = \d*
