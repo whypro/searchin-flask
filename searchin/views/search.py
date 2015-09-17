@@ -3,6 +3,7 @@ from __future__ import unicode_literals, division
 import json
 import pytz
 import datetime
+import re
 
 from flask import Blueprint, render_template, g, jsonify, Response, request, current_app, abort
 import pymongo
@@ -26,11 +27,12 @@ def show_hot_keys():
     return render_template('search/hot-keys.html', hot_keys=hot_keys)
 
 
-@search.route('/paper/json/<key>/')
-def get_paper_search_result_json(key):
+@search.route('/paper/json/<raw_key>/')
+def get_paper_search_result_json(raw_key):
+    key = format_key(raw_key)
     if is_need_crawl(key, 'paper'):
         # active celery crawl task
-        crawl_papers.delay(key)
+        crawl_papers.delay(raw_key)
 
     start = int(request.args.get('start', 0))
     count = int(request.args.get('count', 10))
@@ -47,11 +49,12 @@ def get_paper_search_result_json(key):
     # return jsonify(key=key, count=len(papers_dict), books=papers_dict)
 
 
-@search.route('/book/json/<key>/')
-def get_book_search_result_json(key):
+@search.route('/book/json/<raw_key>/')
+def get_book_search_result_json(raw_key):
+    key = format_key(raw_key)
     if is_need_crawl(key, 'book'):
         # active celery crawl task
-        crawl_books.delay(key)
+        crawl_books.delay(raw_key)
 
     start = int(request.args.get('start', 0))
     count = int(request.args.get('count', 10))
@@ -70,7 +73,13 @@ def get_book_search_result_json(key):
 
 def load_papers(key, start, count):
     # TODO: 先排序后分页
-    papers = mongo.db.papers.find({'title': {'$regex': key}}, {'_id': False}).sort([('relevancy', pymongo.DESCENDING)]).skip(start).limit(count)
+    search_conditions = []
+    for k in key.split('&'):
+        search_conditions.append({
+            'title': {'$regex': k, '$options': '$i'}
+        })
+
+    papers = mongo.db.papers.find({'$and': search_conditions}, {'_id': False}).sort([('relevancy', pymongo.DESCENDING)]).skip(start).limit(count)
     if start == 0:
         mongo.db.queries.update({'key': key}, {'$inc': {'count.paper': 1}}, upsert=True)
 
@@ -80,7 +89,13 @@ def load_papers(key, start, count):
 
 
 def load_books(key, start, count):
-    books = mongo.db.books.find({'title': {'$regex': key}}, {'_id': False}, skip=start, limit=count)
+    search_conditions = []
+    for k in key.split('&'):
+        search_conditions.append({
+            'title': {'$regex': k, '$options': '$i'}
+        })
+
+    books = mongo.db.books.find({'$and': search_conditions}, {'_id': False}, skip=start, limit=count)
     if start == 0:
         mongo.db.queries.update({'key': key}, {'$inc': {'count.book': 1}}, upsert=True)
     # print books.count()
@@ -111,3 +126,11 @@ def is_need_crawl(key, query_type):
     return need_crawl
 
 
+def format_key(key):
+    # 将一些分割字符过滤掉
+    normal_string = re.sub('\s|\|', ' ', key)
+    valid_keys = filter(lambda x: x, re.split(' ', normal_string))
+    #print valid_keys
+    key = '&'.join(valid_keys)
+    #print key
+    return key
