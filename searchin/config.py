@@ -26,6 +26,8 @@ class Config(object):
     CRAWL_TIME_DELTA = datetime.timedelta(days=1)
 
     CRAWL_PAPERS_ONLINE = True
-    CRAWL_BOOKS_ONLINE = False
+    CRAWL_BOOKS_ONLINE = True
 
     MAX_COUNT_PER_REQ = 10
+
+    TIME_ZONE = 'Asia/Shanghai'

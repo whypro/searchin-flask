@@ -90,7 +90,8 @@ def _parse_papers(text, area):
         url = item.xpath('div[@class="sc_content"]/h3/a/@href')[0]
 
         authors = item.xpath('div[@class="sc_content"]/div[@class="sc_info"]/span[1]/a')
-        journal = item.xpath('div[@class="sc_content"]/div[@class="sc_info"]/a[1]/@title')[0].strip('《').strip('》')
+        _journal = item.xpath('div[@class="sc_content"]/div[@class="sc_info"]/a[1]/@title')
+        journal = _journal[0].strip('《').strip('》') if _journal else None
         _year = item.xpath('div[@class="sc_content"]/div[@class="sc_info"]/span[@class="sc_time"]/@data-year')
         year = int(_year[0]) if _year else None
         key_words = item.xpath('div[@class="sc_content"]/div[@class="c_abstract"]/p/span/a')
@@ -117,117 +118,8 @@ def _parse_papers(text, area):
 
 @celery.task
 def crawl_books(key):
-    # if not _is_need_crawl(key, 'book'):
-    #     return []
-
-    _set_crawled(key, 'book')
-
-    url_template = 'http://61.150.69.38:8080/opac/openlink.php?strSearchType=title&match_flag=forward&historyCount=1&strText={key}&doctype=ALL&with_ebook=on&displaypg=10&showmode=table&sort=CATA_DATE&orderby=desc&dept=ALL'
-    
-    books = _fetch_books(url_template.format(key=key))
-
-    return books
-
-
-def _fetch_books(url, page=1):
-    print url
-    response = requests.get(url)
-    response.encoding = 'utf-8'
-    books = []
-
-    for href in _parse_book_list(response.text):
-        book_url = urljoin(response.url, href)
-        r = requests.get(book_url)
-        r.encoding = 'utf-8'
-        book = _parse_book(r.text, book_url)
-        if book:
-            books.append(book)
-
-    # 保存
-    # print books
-    save_books(books)
-       
-    if page < Config.MAX_CRAWL_PAGE:
-        parser = etree.HTMLParser()
-        tree = etree.parse(StringIO(response.text), parser)
-        _next_page = tree.xpath('//div[@class="numstyle"]/a[text()="下一页"]/@href')
-        # print _next_page
-        if _next_page:
-            next_page = _next_page[0]
-            next_url = urljoin(url, next_page)
-            return books + list(_fetch_books(next_url, page+1))
-        else:
-            return books
-    else:
-        return books
-
-
-def _parse_book_list(text):
-    parser = etree.HTMLParser()
-    tree = etree.parse(StringIO(text), parser)
-    items = tree.xpath('//table[@id="result_content"]/tr[@bgcolor="#FFFFFF"]')
-    for item in items:
-        href = item.xpath('td[2]/a/@href')[0]
-        yield href
-
-
-def _parse_book(text, url):
-    print url
-    parser = etree.HTMLParser()
-    tree = etree.parse(StringIO(text), parser)
-
-    # picture = tree.xpath('//img[@id="book_img"]/@src')[0]
-
-    book_dict = dict()
-    items = tree.xpath('//div[@id="item_detail"]/dl[@class="booklist"]')
-    for item in items:
-        _dt = item.xpath('dt/text()')
-        # print _dt
-        if not _dt:
-            continue
-        dt = _dt[0].rstrip(':')
-        dd = item.xpath('dd')[0].xpath('string(.)')
-        # print dt, dd
-        if dt not in book_dict:
-            book_dict[dt] = dd
-    # print book_dict
-
-    book = Book()
-    # book.image = picture
-    book.click_num = 0
-    book.url = url
-    if '题名/责任者' in book_dict:
-        match = re.search(r'([^\/]*)(\/([^\/]*))?', book_dict['题名/责任者'])
-        book.title = match.group(1)
-        book.authors = match.group(3)
-        # book.title, book.authors = book_dict['题名/责任者'].split('/')
-    if '出版发行项' in book_dict:
-        book.publisher = book_dict['出版发行项'].split(',')[0].split(':')
-        try:
-            book.year = book_dict['出版发行项'].split(',')[1]
-        except IndexError:
-            book.year = None
-
-    if 'ISBN及定价' in book_dict:
-        book.isbn = book_dict['ISBN及定价'].split('/')[0].split(' ')[0]
-        try: 
-            book.price = book_dict['ISBN及定价'].split('/')[1]
-        except IndexError:
-            book.price = None
-    else:
-        return None
-
-    if '中图法分类号' in book_dict:
-        book.category_number = book_dict['中图法分类号']
-    else:
-        return None
-
-    if '提要文摘附注' in book_dict:
-        book.summary = book_dict['提要文摘附注']
-    if '豆瓣简介' in book_dict:
-        book.douban_summary = book_dict['豆瓣简介']
-
-    return book
+    spider = OPACSpider()
+    spider.crawl(key=key)
 
 
 def save_papers(papers):
@@ -238,28 +130,6 @@ def save_papers(papers):
         #paper_dict.pop('relevancy', 0)
         db.papers.update({'url': paper.url}, {'$set': paper_dict}, upsert=True)
     client.close()
-
-
-def save_books(books):
-    client = MongoClient(host=Config.MONGO_HOST, port=Config.MONGO_PORT, tz_aware=True)
-    db = client[Config.MONGO_DBNAME]
-    for book in books:
-        book_dict = book.__dict__
-        db.books.update({'url': book.url}, {'$set': book_dict}, upsert=True)
-    client.close()
-
-
-def _book_exists(book_url):
-    client = MongoClient(host=Config.MONGO_HOST, port=Config.MONGO_PORT, tz_aware=True)
-    db = client[Config.MONGO_DBNAME]
-
-    if db.books.find({'url': book_url}).count():
-        ret = True
-    else:
-        ret = False
-
-    client.close()
-    return ret
 
 
 def _set_crawled(key, query_type):
@@ -290,6 +160,7 @@ def auto_crawl_books(start_cls='A', start_page=1):
 class OPACSpider(object):
     """"""
     cls_view_url_template = 'http://61.150.69.38:8080/browse/cls_browsing_book.php?s_doctype=all&cls={cls}&page={page}'
+    search_view_url_template = 'http://61.150.69.38:8080/opac/openlink.php?strSearchType=title&match_flag=forward&historyCount=1&strText={key}&doctype=ALL&with_ebook=on&displaypg=10&showmode=table&sort=CATA_DATE&orderby=desc&dept=ALL&page={page}'
 
     def __init__(self):
         self.parser = etree.HTMLParser()
@@ -307,6 +178,40 @@ class OPACSpider(object):
             print '{cls}: {max_page}'.format(cls=cls, max_page=max_page)
             for page in range(start_page, max_page+1):
                 self.parse_cls_view_list(cls, page)
+
+    def crawl(self, key):
+        self.set_key_crawled(key)
+        max_page = self.parse_search_view_max_page(key)
+        for page in range(1, min(Config.MAX_CRAWL_PAGE, max_page)+1):
+            self.parse_search_view_list(key, page)
+
+    @task(ignore_result=True)
+    def parse_search_view_list(self, key, page):
+        search_view_url = self.search_view_url_template.format(key=key, page=page)
+        print search_view_url
+        response = requests.get(search_view_url)
+        response.encoding = 'utf-8'
+
+        tree = etree.parse(StringIO(response.text), self.parser)
+        book_items = tree.xpath('//table[@id="result_content"]/tr[@bgcolor="#FFFFFF"]')
+        # print key, page, book_items
+        for book_item in book_items:
+            href = book_item.xpath('td[2]/a/@href')[0]
+            book_url = urljoin(response.url, href)
+
+            if not self.is_book_need_update(book_url):
+                continue
+
+            self.parse_book_detail(book_url)
+
+    def parse_search_view_max_page(self, key):
+        search_view_url = self.search_view_url_template.format(key=key, page=1)
+        response = requests.get(search_view_url)
+        tree = etree.parse(StringIO(response.text), self.parser)
+        _max_page = tree.xpath('//div[@class="numstyle"]/b/font[@color="black"]/text()')
+        max_page = int(_max_page[0]) if _max_page else 1
+        print max_page
+        return max_page
 
     def parse_cls_view_max_page(self, cls):
         cls_view_url = self.cls_view_url_template.format(cls=cls, page=1)
@@ -401,13 +306,23 @@ class OPACSpider(object):
 
     def is_book_exists(self, url):
         """检查 url 对应的图书是否存在于数据库中"""
-        if self.db.books.find({'url': url}).count():
+        if self.db.books.find_one({'url': url}):
             return True
         else:
             return False
 
+    def is_book_need_update(self, url):
+        """检查 url 对应的图书是否需要更新"""
+        if self.db.books.find_one({'url': url, 'authors': {'$ne': None}}):
+            return False
+        else:
+            return True
+
     def save_books(self, books):
+        tz = pytz.timezone(Config.TIME_ZONE)
+        now = datetime.datetime.now(tz)
         for book in books:
+            book.update_time = now  # 当前时间
             book_dict = book.__dict__
             self.db.books.update({'url': book.url}, {'$set': book_dict}, upsert=True)
 
@@ -416,3 +331,7 @@ class OPACSpider(object):
 
     def is_cls_crawled(self, cls):
         pass
+
+    def set_key_crawled(self, key):
+        tz = pytz.timezone(Config.TIME_ZONE)
+        self.db.queries.update({'key': key}, {'$set': {'last_crawl.book': datetime.datetime.now(tz)}}, upsert=True)
