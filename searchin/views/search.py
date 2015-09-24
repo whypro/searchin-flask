@@ -95,7 +95,7 @@ def load_books(key, start, count):
             'title': {'$regex': k, '$options': '$i'}
         })
 
-    books = mongo.db.books.find({'$and': search_conditions}, {'_id': False}, skip=start, limit=count)
+    books = mongo.db.books.find({'$and': search_conditions}, {'_id': False, 'update_time': False}, skip=start, limit=count)
     if start == 0:
         mongo.db.queries.update({'key': key}, {'$inc': {'count.book': 1}}, upsert=True)
     # print books.count()
