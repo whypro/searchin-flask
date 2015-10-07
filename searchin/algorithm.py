@@ -22,12 +22,19 @@ def calculate_paper_relevancy(year, cite_num, click_num):
     c = math.log(min(click_num + 1, MAX_CLICK_NUM)) / math.log(MAX_CLICK_NUM)
 
     #归一化 防止某一个参数过大，对其他参数形成消弱。
-    sum_abc = a + b + c
-    a = a / sum_abc
-    b = b / sum_abc
-    c = c / sum_abc
+    # sum_abc = a + b + c
+    # print a, b, c
+    # a = a / sum_abc
+    # b = b / sum_abc
+    # c = c / sum_abc
+    # print a, b, c
     
     relevancy_paper = a * 0.5 + b * 0.3 + c * 0.2
 
     return relevancy_paper
 
+
+if __name__ == '__main__':
+    print calculate_paper_relevancy(2015, 20, 1)
+    print calculate_paper_relevancy(2008, 1, 1)
+    print calculate_paper_relevancy(2008, 2000, 1)
