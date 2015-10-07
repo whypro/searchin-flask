@@ -4,7 +4,7 @@ import datetime
 import math
 
 #用于计算论文的排名影响因子  注意后缀 "_paper" 的区别
-def calculate_relevancy_paper(year, cite_num, click_num):
+def calculate_paper_relevancy(year, cite_num, click_num):
     if not year:
         return 0
 

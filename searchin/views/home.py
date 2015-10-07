@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for, abort, current_app
 
 from ..extensions import mongo
-from ..algorithm import calculate_relevancy
+from ..algorithm import calculate_paper_relevancy
 from ..tasks import refresh_all_relevancy, auto_crawl_books
 
 
@@ -27,7 +27,7 @@ def click_redirect():
         paper = mongo.db.papers.find_and_modify({'url': url}, {'$inc': {'click_num': 1}})
         if paper:
             # print paper
-            relevancy = calculate_relevancy(paper['year'], paper['cite_num'], paper['click_num'])
+            relevancy = calculate_paper_relevancy(paper['year'], paper['cite_num'], paper['click_num'])
             mongo.db.papers.update({'url': url}, {'$set': {'relevancy': relevancy}})
             invalid = False
     elif redirect_type == 'book':

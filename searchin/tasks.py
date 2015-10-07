@@ -16,7 +16,7 @@ from pymongo import MongoClient
 
 from .config import Config
 from .models import Paper, Book
-from .algorithm import calculate_relevancy
+from .algorithm import calculate_paper_relevancy
 
 
 celery = Celery('searchin', backend=Config.CELERY_RESULT_BACKEND, broker=Config.CELERY_BROKER_URL)
@@ -111,7 +111,7 @@ def _parse_papers(text, area):
         paper.cite_num = cite_num
         paper.click_num = 0
         paper.area = area
-        paper.relevancy = calculate_relevancy(year=year, cite_num=cite_num, click_num=0)
+        paper.relevancy = calculate_paper_relevancy(year=year, cite_num=cite_num, click_num=0)
 
         yield paper
 
@@ -146,7 +146,7 @@ def refresh_all_relevancy():
     db = client[Config.MONGO_DBNAME]
     papers = db.papers.find({})
     for paper in papers:
-        relevancy = calculate_relevancy(paper['year'], paper['cite_num'], paper['click_num'])
+        relevancy = calculate_paper_relevancy(paper['year'], paper['cite_num'], paper['click_num'])
         db.papers.update({'url': paper['url']}, {'$set': {'relevancy': relevancy}})
     client.close()
 

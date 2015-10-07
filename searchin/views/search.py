@@ -10,7 +10,7 @@ import pymongo
 
 from ..extensions import mongo
 from ..tasks import crawl_papers, crawl_books
-from ..algorithm import calculate_relevancy
+from ..algorithm import calculate_paper_relevancy
 
 
 search = Blueprint('search', __name__, url_prefix='/search')
