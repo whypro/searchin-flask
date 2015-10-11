@@ -128,7 +128,7 @@ def is_need_crawl(key, query_type):
 
 def format_key(key):
     # 将一些分割字符转义
-    safe_str = re.sub(r'(\*|\.|\?|\+|\$|\^|\[|\]|\(|\)|\{|\}|\||\\|\/)', r'\\\1', key)
+    safe_str = re.sub(r'(\*|\.|\?|\+|\$|\^|\[|\]|\(|\)|\{|\}|\||\\|/)', r'\\\1', key)
     valid_keys = filter(lambda x: x, re.split(' ', safe_str))
     #print valid_keys
     key = '&'.join(valid_keys)

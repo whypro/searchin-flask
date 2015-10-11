@@ -2,6 +2,7 @@ var count_per_req = 10;
 
 
 function search_papers(key, start, count) {
+    var begin = new Date();
     var get_paper_search_result_json_url = "/search/paper/json/"+key+"/?start="+start+"&count="+count;
     $.get(get_paper_search_result_json_url, function(data, status) {
         if (status != "success") {
@@ -9,20 +10,28 @@ function search_papers(key, start, count) {
             return;
         }
 
+        var end = new Date();
+        var spend = end.getTime() - begin.getTime();
+        console.log(spend);
+
         show_papers(data);
 
-        if (data['count'] < count)
+        var ts_sel = $("#paper-time-spend");
+        if (ts_sel.length > 0)
         {
-            $("#paper-more-button").text("没有更多了");
-            return;
+            ts_sel.html('<p><small>耗时 '+spend+' 毫秒</small></p>');
+        } else {
+            $("#paper-search-result").before(
+                '<div id="paper-time-spend" class="text-center"><p><small>耗时 '+spend+' 毫秒</small></p></div>'
+            );
         }
-        
+
         if ($("#paper-more-button").length > 0)
         {
             // 存在
             $("#paper-more-button").button('reset');
-            $('#paper-more-button').off('click');
-            $('#paper-more-button').on('click', function() {
+            $("#paper-more-button").off('click');
+            $("#paper-more-button").on('click', function() {
                 $(this).button('loading');
                 search_papers(key, data["start"]+data['count'], count_per_req)
             });
@@ -33,17 +42,24 @@ function search_papers(key, start, count) {
                     '加载更多'+
                 '</button>'
             );
-            $('#paper-more-button').off('click');
-            $('#paper-more-button').on('click', function() {
+            $("#paper-more-button").off('click');
+            $("#paper-more-button").on('click', function() {
                 $(this).button('loading');
                 search_papers(key, data["start"]+data['count'], count_per_req)
             });
+        }
+
+        if (data['count'] < count)
+        {
+            $("#paper-more-button").text("没有更多了");
+            return;
         }
     });
 }
 
 
 function search_books(key, start, count) {
+    var begin = new Date();
     var get_book_search_result_json_url = "/search/book/json/"+key+"/?start="+start+"&count="+count;
     $.get(get_book_search_result_json_url, function(data, status) {
         if (status != "success") {
@@ -51,16 +67,22 @@ function search_books(key, start, count) {
             return;
         }
 
+        var end = new Date();
+        var spend = end.getTime() - begin.getTime();
+        console.log(spend);
+
         show_books(data);
 
-        if (data["count"] < count)
+        var ts_sel = $("#book-time-spend");
+        if (ts_sel.length > 0)
         {
-            $("#book-more-button").text("没有更多了");
-            // $("#book-more-button").button("reset");
-            // $("#book-more-button").attr("disabled", "disabled");
-            return;
+            ts_sel.html('<p><small>耗时 '+spend+' 毫秒</small></p>');
+        } else {
+            $("#book-search-result").before(
+                '<div id="book-time-spend" class="text-center"><p><small>耗时 '+spend+' 毫秒</small></p></div>'
+            );
         }
-        
+
         if ($("#book-more-button").length > 0)
         {
             // 存在
@@ -82,6 +104,14 @@ function search_books(key, start, count) {
                 $(this).button("loading");
                 search_books(key, data["start"]+data["count"], count_per_req)
             });
+        }
+
+        if (data["count"] < count)
+        {
+            $("#book-more-button").text("没有更多了");
+            // $("#book-more-button").button("reset");
+            // $("#book-more-button").attr("disabled", "disabled");
+            return;
         }
     });
 }
@@ -119,9 +149,6 @@ function show_papers(data)
         );
     }
 }
-
-
-
 
 
 function show_books(data)
@@ -180,6 +207,9 @@ $(document).ready(function() {
         $("#book-search-result").empty();
         $("#paper-more-button").remove();
         $("#book-more-button").remove();
+        $("#paper-time-spend").remove();
+        $("#book-time-spend").remove();
+
         $("#top-br").remove();
         $("#bottom-br").remove();
         search();
