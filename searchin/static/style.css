@@ -1,3 +1,4 @@
 body { 
-    font-family: "Microsoft YaHei", Arial; 
+    font-family: "Microsoft YaHei", Arial;
+    overflow-y: scroll;
 }
