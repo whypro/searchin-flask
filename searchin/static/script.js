@@ -26,11 +26,13 @@ function search_papers(key, start, count) {
             );
         }
 
+        /*
         if (data['count'] < count) {
             $("#paper-more-button").text("没有更多了");
         } else {
             $("#paper-more-button").text("加载更多");
         }
+        */
 
         if ($("#paper-more-button").length > 0)
         {
@@ -83,11 +85,13 @@ function search_books(key, start, count) {
             );
         }
 
+        /*
         if (data['count'] < count) {
             $("#book-more-button").text("没有更多了");
         } else {
             $("#book-more-button").text("加载更多");
         }
+        */
 
         if ($("#book-more-button").length > 0)
         {
