@@ -40,8 +40,8 @@ def click_redirect():
 
     return redirect(url)
 
-@home.route('/refresh/')
-def refresh():
+@home.route('/relevancy/refresh/')
+def refresh_relevancy():
     refresh_all_relevancy.delay()
     return redirect(url_for('home.index'))
 

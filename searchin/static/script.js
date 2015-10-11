@@ -49,10 +49,10 @@ function search_papers(key, start, count) {
             });
         }
 
-        if (data['count'] < count)
-        {
+        if (data['count'] < count) {
             $("#paper-more-button").text("没有更多了");
-            return;
+        } else {
+            $("#paper-more-button").text("加载更多");
         }
     });
 }
