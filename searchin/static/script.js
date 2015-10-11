@@ -22,7 +22,7 @@ function search_papers(key, start, count) {
             ts_sel.html('<p><small>耗时 '+spend+' 毫秒</small></p>');
         } else {
             $("#paper-search-result").before(
-                '<div id="paper-time-spend" class="text-center"><p><small>耗时 '+spend+' 毫秒</small></p></div>'
+                '<div id="paper-time-spend" class="text-center"><p><small>共找到 '+data["total"]+' 条记录，耗时 '+spend+' 毫秒</small></p></div>'
             );
         }
 
@@ -81,7 +81,7 @@ function search_books(key, start, count) {
             ts_sel.html('<p><small>耗时 '+spend+' 毫秒</small></p>');
         } else {
             $("#book-search-result").before(
-                '<div id="book-time-spend" class="text-center"><p><small>耗时 '+spend+' 毫秒</small></p></div>'
+                '<div id="book-time-spend" class="text-center"><p><small>共找到 '+data["total"]+' 条记录，耗时 '+spend+' 毫秒</small></p></div>'
             );
         }
 

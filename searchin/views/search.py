@@ -41,9 +41,10 @@ def get_paper_search_result_json(raw_key):
         abort(400)
 
     papers_cursor = load_papers(key, start, count)
+    total = papers_cursor.count()
     # convert pymongo cursor to dict
     papers_dict = [p for p in papers_cursor]
-    result_dict = {'key': key, 'start': start, 'count': len(papers_dict), 'papers': papers_dict}
+    result_dict = {'key': key, 'total': total, 'start': start, 'count': len(papers_dict), 'papers': papers_dict}
     result_json = json.dumps(result_dict, ensure_ascii=False, encoding='utf-8')
     return Response(result_json,  mimetype='application/json; charset=utf-8')
     # return jsonify(key=key, count=len(papers_dict), books=papers_dict)
@@ -64,8 +65,9 @@ def get_book_search_result_json(raw_key):
 
     books_cursor = load_books(key, start, count)
     # convert pymongo cursor to dict
+    total = books_cursor.count()
     books_dict = [b for b in books_cursor]
-    result_dict = {'key': key, 'start': start, 'count': len(books_dict), 'books': books_dict}
+    result_dict = {'key': key, 'total': total, 'start': start, 'count': len(books_dict), 'books': books_dict}
     result_json = json.dumps(result_dict, ensure_ascii=False, encoding='utf-8')
     return Response(result_json,  mimetype='application/json; charset=utf-8')
     # return jsonify(key=key, count=len(books_dict), books=books_dict)
