@@ -17,12 +17,13 @@ function search_papers(key, start, count) {
         show_papers(data);
 
         var ts_sel = $("#paper-time-spend");
+        var content = '<p><small>共找到 '+data["total"]+' 条记录，耗时 '+spend+' 毫秒</small></p>';
         if (ts_sel.length > 0)
         {
-            ts_sel.html('<p><small>耗时 '+spend+' 毫秒</small></p>');
+            ts_sel.html(content);
         } else {
             $("#paper-search-result").before(
-                '<div id="paper-time-spend" class="text-center"><p><small>共找到 '+data["total"]+' 条记录，耗时 '+spend+' 毫秒</small></p></div>'
+                '<div id="paper-time-spend" class="text-center">'+content+'</div>'
             );
         }
 
@@ -76,12 +77,13 @@ function search_books(key, start, count) {
         show_books(data);
 
         var ts_sel = $("#book-time-spend");
+        var content = '<p><small>共找到 '+data["total"]+' 条记录，耗时 '+spend+' 毫秒</small></p>';
         if (ts_sel.length > 0)
         {
-            ts_sel.html('<p><small>耗时 '+spend+' 毫秒</small></p>');
+            ts_sel.html(content);
         } else {
             $("#book-search-result").before(
-                '<div id="book-time-spend" class="text-center"><p><small>共找到 '+data["total"]+' 条记录，耗时 '+spend+' 毫秒</small></p></div>'
+                '<div id="book-time-spend" class="text-center">'+content+'</div>'
             );
         }
 
