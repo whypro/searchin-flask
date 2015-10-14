@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for, abort, current_app
+import requests
 
 from ..extensions import mongo
 from ..algorithm import calculate_paper_relevancy
@@ -52,3 +53,16 @@ def crawl():
     start_page = int(request.args.get('start_page', '1'))
     auto_crawl_books.delay(start_cls=start_cls, start_page=start_page)
     return redirect(url_for('home.index'))
+
+
+@home.route('/image/<isbn>/')
+def douban_image(isbn):
+    print isbn
+    resp = requests.get('https://api.douban.com/v2/book/isbn/{isbn}'.format(isbn=isbn))
+    data = resp.json()
+    try:
+        url = data['images']['small']
+    except KeyError:
+        url = 'http://61.150.69.38:8080/tpl/images/nobook.jpg'
+    return jsonify(url=url)
+
