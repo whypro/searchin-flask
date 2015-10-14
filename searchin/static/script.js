@@ -172,20 +172,13 @@ function show_books(data)
         var douban_summary = books[i]["douban_summary"]
         var click_num = books[i]["click_num"];
 
-        var image = "http://61.150.69.38:8080/tpl/images/nobook.jpg";
-
-        $.get("/image/"+isbn, function (data){
-            image = data["url"];
-        });
-
         $("#book-search-result").append(
             '<div class="list-group-item text-left">'+
             '    <h4 class="list-group-item-heading">'+
             '        <a href="'+'/redirect/?type=book&url='+url+'" target="_blank">'+title+'</a>'+
             '    </h4>'+
-            '    <div class="pull-right"><img src="'+image+'" /></div>'+
             '    <p class="list-group-item-text">'+
-            '        <img class="pull-right" height="120px" />'+
+            '        <img id="img-'+isbn+'" class="pull-right" height="120px">'+
             '        作者：'+authors+'<br />'+
             '        出版社：'+publisher+'<br />'+
             '        出版时间：'+year+'<br />'+
@@ -198,6 +191,10 @@ function show_books(data)
             '    </p>'+
             '</div>'
         );
+
+        $.get("/image/"+isbn, function (data){
+            $("#img-"+isbn).attr("src", data["url"]);
+        });
     }
 }
 
