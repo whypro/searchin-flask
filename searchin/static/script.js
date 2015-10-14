@@ -193,7 +193,8 @@ function show_books(data)
         );
 
         $.get("/image/"+isbn, function (data){
-            $("#img-"+isbn).attr("src", data["url"]);
+            // alert(data["url"]);
+            $("#img-"+data["isbn"]).attr("src", data["url"]);
         });
     }
 }

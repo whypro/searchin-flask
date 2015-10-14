@@ -57,12 +57,12 @@ def crawl():
 
 @home.route('/image/<isbn>/')
 def douban_image(isbn):
-    print isbn
+    # print isbn
     resp = requests.get('https://api.douban.com/v2/book/isbn/{isbn}'.format(isbn=isbn))
     data = resp.json()
     try:
         url = data['images']['small']
     except KeyError:
         url = 'http://61.150.69.38:8080/tpl/images/nobook.jpg'
-    return jsonify(url=url)
+    return jsonify(isbn=isbn, url=url)
 
