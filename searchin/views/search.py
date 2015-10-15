@@ -4,6 +4,7 @@ import json
 import pytz
 import datetime
 import re
+import urllib
 
 from flask import Blueprint, render_template, g, jsonify, Response, request, current_app, abort
 import pymongo
@@ -42,12 +43,16 @@ def get_paper_search_result_json(raw_key):
 
     papers_cursor = load_papers(key, start, count)
     total = papers_cursor.count()
-    # convert pymongo cursor to dict
-    papers_dict = [p for p in papers_cursor]
-    result_dict = {'key': key, 'total': total, 'start': start, 'count': len(papers_dict), 'papers': papers_dict}
+    # convert pymongo cursor to list
+    papers_list = []
+    for p in papers_cursor:
+        p['quoted_url'] = urllib.quote(p['url'])
+        papers_list.append(p)
+
+    result_dict = {'key': key, 'total': total, 'start': start, 'count': len(papers_list), 'papers': papers_list}
     result_json = json.dumps(result_dict, ensure_ascii=False, encoding='utf-8')
     return Response(result_json,  mimetype='application/json; charset=utf-8')
-    # return jsonify(key=key, count=len(papers_dict), books=papers_dict)
+    # return jsonify(key=key, count=len(papers_list), books=papers_list)
 
 
 @search.route('/book/json/<raw_key>/')

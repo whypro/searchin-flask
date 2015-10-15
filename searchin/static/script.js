@@ -126,6 +126,7 @@ function show_papers(data)
     var papers = data["papers"]
     for (var i in papers) {
         var url = papers[i]["url"];
+        var quoted_url = papers[i]["quoted_url"];
         var title = papers[i]["title"];
         var key_words = papers[i]["key_words"];
         var area = papers[i]["area"];
@@ -138,7 +139,7 @@ function show_papers(data)
         $("#paper-search-result").append(
             '<div class="list-group-item text-right">'+
             '    <h4 class="list-group-item-heading">'+
-            '        <a href="'+'/redirect/?type=paper&url='+url+'" target="_blank">'+title+'</a>'+
+            '        <a href="'+'/redirect/?type=paper&url='+quoted_url+'" target="_blank">'+title+'</a>'+
             '    </h4>'+
             '    <p class="list-group-item-text">'+
             '        关键词：'+key_words.join(", ")+'<br />'+
