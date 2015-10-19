@@ -49,10 +49,10 @@ class BookSearcher(object):
                 train_data_dict[key]['title_len'] = len(row['title'])
 
         # print "作者为空个数 = ", nullAuthorsNum
-        print "标题为空个数 = ", null_title_num
+        #print "标题为空个数 = ", null_title_num
         # print "关键词为空个数 = ", nullKeyNum
-        print "输入样本行数 = ", line_num
-        print "训练样本总数 = ", len(train_data_dict)
+        #print "输入样本行数 = ", line_num
+        #print "训练样本总数 = ", len(train_data_dict)
 
         self.train_data_dict = train_data_dict
 
@@ -76,10 +76,10 @@ class BookSearcher(object):
             train_data_dict[key]['title_len'] = len(book['title'])
 
         # print "作者为空个数 = ", nullAuthorsNum
-        print "标题为空个数 = ", null_title_num
+        #print "标题为空个数 = ", null_title_num
         # print "关键词为空个数 = ", nullKeyNum
-        print "输入样本行数 = ", line_num
-        print "训练样本总数 = ", len(train_data_dict)
+        #print "输入样本行数 = ", line_num
+        #print "训练样本总数 = ", len(train_data_dict)
 
         self.train_data_dict = train_data_dict
 

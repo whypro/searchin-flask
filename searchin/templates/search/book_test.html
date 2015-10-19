@@ -1,7 +1,7 @@
 {% if books %}
 {% for book in books %}
 <ul>
-    <li><a href="{{ book.url }}">{{ book.title }}</a></li>
+    <li><a href="{{ book.url }}" target="_blank">{{ book.title }}</a></li>
     <li>{{ book.authors }}</li>
     <li>{{ book.isbn }}</li>
     <li>{{ book.price }}</li>
