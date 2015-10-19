@@ -12,6 +12,7 @@ import pymongo
 from ..extensions import mongo
 from ..tasks import crawl_papers, crawl_books
 from ..algorithm import calculate_paper_relevancy
+from ..book_searcher import get_book_searcher
 
 
 search = Blueprint('search', __name__, url_prefix='/search')
@@ -141,3 +142,25 @@ def format_key(key):
     key = '&'.join(valid_keys)
     #print key
     return key
+
+
+@search.route('/book/test/page/<int:page>/', methods=['GET'])
+@search.route('/book/test/', methods=['GET'], defaults={'page': 1})
+@search.route('/book/test/', methods=['POST'])
+def search_books_test(page=None):
+    if request.method == 'POST':
+        query_string = request.form['query_string']
+        if not hasattr(current_app, 'book_searcher'):
+            current_app.book_searcher = get_book_searcher()
+        bs = current_app.book_searcher
+        result_list = bs.split_count_calculate_collect(query_string)
+        books = []
+        begin, end = 0, 100
+        for oid in result_list[begin:end]:
+            book = mongo.db.books.find_one({'_id': oid})
+            books.append(book)
+        # books = mongo.db.find({'_id': {'$in': result_list}})
+        return render_template('search/book_test.html', books=books)
+
+    return render_template('search/book_test.html')
+    

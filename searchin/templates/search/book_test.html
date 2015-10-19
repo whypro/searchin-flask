@@ -1,0 +1,15 @@
+{% if books %}
+{% for book in books %}
+<ul>
+    <li><a href="{{ book.url }}">{{ book.title }}</a></li>
+    <li>{{ book.authors }}</li>
+    <li>{{ book.isbn }}</li>
+    <li>{{ book.price }}</li>
+</ul>
+{% endfor %}
+{% else %}
+<form action="{{ url_for('search.search_books_test') }}" method="post">
+    <input name="query_string" type="text" value="">
+    <input type="submit" value="搜索">
+</form>
+{% endif %}
