@@ -15,10 +15,13 @@ from .extensions import mongo
 
 class BookSearcher(object):
 
-    def __init__(self):
-        self.train_data_dict = dict()
-        self.inverted_train_data_dict = dict()
+    def __init__(self, filename=None):
+        if filename:
+            train_data_dict = self.load_from_file(filename)
+        else:
+            train_data_dict = self.load_from_db()
 
+        self.inverted_train_data_dict = self.generate_inverted_dict(train_data_dict)
 
     def load_from_file(self, filename='books.json'):
         """
@@ -54,7 +57,7 @@ class BookSearcher(object):
         #print "输入样本行数 = ", line_num
         #print "训练样本总数 = ", len(train_data_dict)
 
-        self.train_data_dict = train_data_dict
+        return train_data_dict
 
     def load_from_db(self):
         train_data_dict = defaultdict(dict)
@@ -81,9 +84,9 @@ class BookSearcher(object):
         #print "输入样本行数 = ", line_num
         #print "训练样本总数 = ", len(train_data_dict)
 
-        self.train_data_dict = train_data_dict
+        return train_data_dict
 
-    def generate_inverted_dict(self):
+    def generate_inverted_dict(self, train_data_dict):
         """
             生成倒排列表
             原始形式：
@@ -95,14 +98,14 @@ class BookSearcher(object):
 
         inverted_train_data_dict = defaultdict(dict)
 
-        for key, item_dict in self.train_data_dict.items():
+        for key, item_dict in train_data_dict.items():
             for word in item_dict['title']:
                 inverted_train_data_dict[word][key] = dict()
                 inverted_train_data_dict[word][key]['title_len'] = item_dict['title_len']
                 inverted_train_data_dict[word][key]['query_ratio'] = item_dict['query_ratio']
 
         # print len(inverted_train_data_dict)
-        self.inverted_train_data_dict = inverted_train_data_dict
+        return inverted_train_data_dict
 
     def split_count_calculate_collect(self, query_string):
         '''
@@ -141,18 +144,15 @@ class BookSearcher(object):
 
 def get_book_searcher():
     #print g.book_searcher
-    bs = BookSearcher()
+    # bs = BookSearcher()
+    bs = BookSearcher(filename='books.json')
     # bs.load_from_file('data/books.json')
-    bs.load_from_db()
-    bs.generate_inverted_dict()
     print 'init book searcher done.'
     return bs
         
 
 if __name__ == '__main__':
-    bs = BookSearcher()
-    bs.load_from_file(filename='books.json')
-    bs.generate_inverted_dict()
+    bs = BookSearcher(filename='books.json')
     # before_search = time.time() * 1000
     result_list = bs.split_count_calculate_collect(query_string='经济')
     # after_search = time.time() * 1000
