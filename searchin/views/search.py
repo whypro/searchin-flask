@@ -42,6 +42,10 @@ def show_hot_keys():
 
 @search.route('/paper/json/<raw_key>/')
 def get_paper_search_result_json(raw_key):
+
+    result_json = json.dumps({}, ensure_ascii=False, encoding='utf-8', cls=CJsonEncoder)
+    return Response(result_json,  mimetype='application/json; charset=utf-8')
+
     key = format_key(raw_key)
     if is_need_crawl(key, 'paper'):
         # active celery crawl task
@@ -72,7 +76,8 @@ def get_book_search_result_json(raw_key):
     key = format_key(raw_key)
     if is_need_crawl(key, 'book'):
         # active celery crawl task
-        crawl_books.delay(raw_key)
+        # crawl_books.delay(raw_key)
+        pass
 
     start = int(request.args.get('start', 0))
     count = int(request.args.get('count', 10))
@@ -127,7 +132,8 @@ def search_books_from_mongodb(key, start, count):
 
 def search_books_from_es(key, start, count):
     es = Elasticsearch()
-    res = es.search(index='books', body={'query': {'match_all': {}}})
+    dsl_query = {"query": {"match": {"_all": {"query": key, "operator": "and"}}}}
+    res = es.search(index='searchin', doc_type=['books'], body=dsl_query)
     total = res['hits']['total']
     books = [hit['_source'] for hit in res['hits']['hits']]
     return books, total
