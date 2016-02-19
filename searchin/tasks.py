@@ -271,10 +271,16 @@ class OPACSpider(object):
         book.click_num = 0
         book.url = url
         if '题名/责任者' in book_dict:
-            match = re.search(r'(.*)(/([^/]*))+', book_dict['题名/责任者'])
-            book.title = match.group(1)
-            book.authors = match.group(3)
-            # book.title, book.authors = book_dict['题名/责任者'].split('/')
+            title_author_list = book_dict['题名/责任者'].split('/')
+            if len(title_author_list) > 1:
+                book.title = '/'.join(title_author_list[:-1])
+                book.authors = title_author_list[-1]
+            else:
+                book.title = title_author_list[0]
+                book.authors = None
+        else:
+            return None
+
         if '出版发行项' in book_dict:
             book.publisher = book_dict['出版发行项'].split(',')[0].split(':')
             try:
