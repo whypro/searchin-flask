@@ -319,6 +319,9 @@ class OPACSpider(object):
 
     def is_book_need_update(self, url):
         """检查 url 对应的图书是否需要更新"""
+        # TODO: 强制更新
+        return True
+
         if self.db.books.find_one({'url': url, 'authors': {'$ne': None}}):
             return False
         else:

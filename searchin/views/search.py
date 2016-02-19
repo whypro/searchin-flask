@@ -42,10 +42,6 @@ def show_hot_keys():
 
 @search.route('/paper/json/<raw_key>/')
 def get_paper_search_result_json(raw_key):
-
-    result_json = json.dumps({}, ensure_ascii=False, encoding='utf-8', cls=CJsonEncoder)
-    return Response(result_json,  mimetype='application/json; charset=utf-8')
-
     key = format_key(raw_key)
     if is_need_crawl(key, 'paper'):
         # active celery crawl task
@@ -76,8 +72,7 @@ def get_book_search_result_json(raw_key):
     key = format_key(raw_key)
     if is_need_crawl(key, 'book'):
         # active celery crawl task
-        # crawl_books.delay(raw_key)
-        pass
+        crawl_books.delay(raw_key)
 
     start = int(request.args.get('start', 0))
     count = int(request.args.get('count', 10))
