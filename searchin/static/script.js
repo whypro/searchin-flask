@@ -135,6 +135,7 @@ function show_papers(data)
         var year = papers[i]["year"];
         var cite_num = papers[i]["cite_num"];
         var click_num = papers[i]["click_num"];
+        var relevancy = papers[i]["relevancy"].toFixed(2);
 
         $("#paper-search-result").append(
             '<div class="list-group-item text-right">'+
@@ -147,7 +148,7 @@ function show_papers(data)
             '        期刊：'+journal+'<br />'+
             '        作者：'+authors.join(", ")+'<br />'+
             '        年份：'+year+'<br />'+
-            '        引用量：'+cite_num+'<br />'+
+            '        相关度：'+relevancy+'<br />'+
             '        点击量：'+click_num+
             '    </p>'+
             '</div>'
@@ -188,7 +189,7 @@ function show_books(data)
             '        定价：'+price+'<br />'+
             '        点击量：'+click_num+'<br />'+
             // '        摘要：'+(summary == undefined ? "无" : summary)+
-            '        摘要：'+(douban_summary == undefined ? "无" : douban_summary)+
+            // '        摘要：'+(douban_summary == undefined ? "无" : douban_summary)+
             '    </p>'+
             '</div>'
         );

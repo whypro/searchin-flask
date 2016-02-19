@@ -19,6 +19,16 @@ from ..book_searcher import get_book_searcher
 search = Blueprint('search', __name__, url_prefix='/search')
 
 
+class CJsonEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, datetime.datetime):
+            return obj.strftime('%Y-%m-%d %H:%M:%S')
+        elif isinstance(obj, datetime.date):
+            return obj.strftime('%Y-%m-%d')
+        else:
+            return json.JSONEncoder.default(self, obj)
+
+
 @search.route('/')
 def show_search():
     return render_template('search/index.html')
@@ -52,7 +62,7 @@ def get_paper_search_result_json(raw_key):
         papers_list.append(p)
 
     result_dict = {'key': key, 'total': total, 'start': start, 'count': len(papers_list), 'papers': papers_list}
-    result_json = json.dumps(result_dict, ensure_ascii=False, encoding='utf-8')
+    result_json = json.dumps(result_dict, ensure_ascii=False, encoding='utf-8', cls=CJsonEncoder)
     return Response(result_json,  mimetype='application/json; charset=utf-8')
     # return jsonify(key=key, count=len(papers_list), books=papers_list)
 

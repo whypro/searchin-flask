@@ -145,7 +145,7 @@ class BookSearcher(object):
 def get_book_searcher():
     #print g.book_searcher
     # bs = BookSearcher()
-    bs = BookSearcher(filename='books.json')
+    bs = BookSearcher(filename='data/books.json')
     # bs.load_from_file('data/books.json')
     print 'init book searcher done.'
     return bs
