@@ -19,7 +19,7 @@ def create_app(config=None):
     # app.register_blueprint(views.member)
     # app.register_blueprint(views.admin)
 
-    # database & migrate
+    # database
     mongo.init_app(app)
     # db.init_app(app)
     # migrate.init_app(app, db)

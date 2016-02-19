@@ -8,6 +8,7 @@ import urllib
 
 from flask import Blueprint, render_template, g, jsonify, Response, request, current_app, abort
 import pymongo
+from elasticsearch import Elasticsearch
 
 from ..extensions import mongo
 from ..tasks import crawl_papers, crawl_books
@@ -69,11 +70,8 @@ def get_book_search_result_json(raw_key):
     if count > current_app.config['MAX_COUNT_PER_REQ']:
         abort(400)
 
-    books_cursor = load_books(key, start, count)
-    # convert pymongo cursor to dict
-    total = books_cursor.count()
-    books_dict = [b for b in books_cursor]
-    result_dict = {'key': key, 'total': total, 'start': start, 'count': len(books_dict), 'books': books_dict}
+    books, total = load_books(key, start, count)
+    result_dict = {'key': key, 'total': total, 'start': start, 'count': len(books), 'books': books}
     result_json = json.dumps(result_dict, ensure_ascii=False, encoding='utf-8')
     return Response(result_json,  mimetype='application/json; charset=utf-8')
     # return jsonify(key=key, count=len(books_dict), books=books_dict)
@@ -97,6 +95,13 @@ def load_papers(key, start, count):
 
 
 def load_books(key, start, count):
+    if False:
+        return search_books_from_mongodb(key, start, count)
+    else:
+        return search_books_from_es(key, start, count)
+
+
+def search_books_from_mongodb(key, start, count):
     search_conditions = []
     for k in key.split('&'):
         search_conditions.append({
@@ -107,8 +112,15 @@ def load_books(key, start, count):
     if start == 0:
         mongo.db.queries.update({'key': key}, {'$inc': {'count.book': 1}}, upsert=True)
     # print books.count()
-    return books
+    return [b for b in books], books.count()
 
+
+def search_books_from_es(key, start, count):
+    es = Elasticsearch()
+    res = es.search(index='books', body={'query': {'match_all': {}}})
+    total = res['hits']['total']
+    books = [hit['_source'] for hit in res['hits']['hits']]
+    return books, total
 
 
 def is_need_crawl(key, query_type):
@@ -122,9 +134,9 @@ def is_need_crawl(key, query_type):
     # print datetime.datetime.now(tz), query['last_crawl']
     if not query:
         need_crawl = True
-    elif not 'last_crawl' in query:
+    elif 'last_crawl' not in query:
         need_crawl = True
-    elif not query_type in query['last_crawl']:
+    elif query_type not in query['last_crawl']:
         need_crawl = True
     elif datetime.datetime.now(tz) - query['last_crawl'][query_type] > current_app.config['CRAWL_TIME_DELTA']:
         need_crawl = True
@@ -163,4 +175,4 @@ def search_books_test(page=None):
         return render_template('search/book_test.html', books=books)
 
     return render_template('search/book_test.html')
-    
+

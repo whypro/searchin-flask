@@ -31,3 +31,8 @@ class Config(object):
     MAX_COUNT_PER_REQ = 10
 
     TIME_ZONE = 'Asia/Shanghai'
+
+    # Elasticsearch
+    ES_HOST = 'localhost'
+    ES_PORT = '9200'
+
