@@ -138,7 +138,7 @@ function show_papers(data)
         var relevancy = papers[i]["relevancy"].toFixed(2);
 
         $("#paper-search-result").append(
-            '<div class="list-group-item text-right">'+
+            '<div class="list-group-item">'+
             '    <h4 class="list-group-item-heading">'+
             '        <a href="'+'/redirect/?type=paper&url='+quoted_url+'" target="_blank">'+title+'</a>'+
             '    </h4>'+
@@ -175,7 +175,7 @@ function show_books(data)
         var click_num = books[i]["click_num"];
 
         $("#book-search-result").append(
-            '<div class="list-group-item text-left">'+
+            '<div class="list-group-item">'+
             '    <h4 class="list-group-item-heading">'+
             '        <a href="'+'/redirect/?type=book&url='+url+'" target="_blank">'+title+'</a>'+
             '    </h4>'+

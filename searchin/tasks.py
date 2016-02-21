@@ -11,6 +11,7 @@ import re
 import requests
 from celery import Celery
 from celery.contrib.methods import task
+from celery.utils.log import get_task_logger
 from pymongo import MongoClient
 # from flask import current_app
 
@@ -20,6 +21,7 @@ from .algorithm import calculate_paper_relevancy
 
 
 celery = Celery('searchin', backend=Config.CELERY_RESULT_BACKEND, broker=Config.CELERY_BROKER_URL)
+logger = get_task_logger(__name__)
 
 
 @celery.task
@@ -308,6 +310,7 @@ class OPACSpider(object):
             book.douban_summary = book_dict['豆瓣简介']
 
         self.save_books([book])
+        logger.info(book.title)
         return book
 
     def is_book_exists(self, url):

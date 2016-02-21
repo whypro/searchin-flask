@@ -128,7 +128,7 @@ def search_books_from_mongodb(key, start, count):
 def search_books_from_es(key, start, count):
     es = Elasticsearch()
     dsl_query = {"query": {"match": {"_all": {"query": key, "operator": "and"}}}}
-    res = es.search(index='searchin', doc_type=['books'], body=dsl_query)
+    res = es.search(index='searchin', doc_type=['books'], body=dsl_query, from_=start, size=count)
     total = res['hits']['total']
     books = [hit['_source'] for hit in res['hits']['hits']]
     return books, total
