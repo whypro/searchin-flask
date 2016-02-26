@@ -281,6 +281,7 @@ class OPACSpider(object):
                 book.title = title_author_list[0]
                 book.authors = None
         else:
+            print '题名/责任者 not in book_dict'
             return None
 
         if '出版发行项' in book_dict:
@@ -297,11 +298,13 @@ class OPACSpider(object):
             except IndexError:
                 book.price = None
         else:
+            print 'ISBN及定价 not in book_dict'
             return None
 
         if '中图法分类号' in book_dict:
             book.category_number = book_dict['中图法分类号']
         else:
+            print '中图法分类号 not in book_dict'
             return None
 
         if '提要文摘附注' in book_dict:
@@ -310,7 +313,8 @@ class OPACSpider(object):
             book.douban_summary = book_dict['豆瓣简介']
 
         self.save_books([book])
-        logger.info(book.title)
+        # logger.info(book.title)
+        print book.title
         return book
 
     def is_book_exists(self, url):
