@@ -128,7 +128,11 @@ def search_papers_from_baiduxueshu(key):
     if data['status']:
         return [], 0
     else:
-        return data['data'], len(data['data'])
+        papers_list = []
+        for p in data['data']:
+            p['quoted_url'] = urllib.quote(p['url'])
+            papers_list.append(p)
+        return papers_list, len(papers_list)
 
 
 def load_books(key, start, count):
