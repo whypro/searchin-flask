@@ -194,7 +194,7 @@ function show_papers(data)
     var papers = data["papers"]
     for (var i in papers) {
         var scholar_url = papers[i]["scholar_url"];
-        // var quoted_url = papers[i]["quoted_url"];
+        var quoted_url = papers[i]["quoted_url"];
         var title = papers[i]["title"][0];
         // var key_words = papers[i]["key_words"];
         // var area = papers[i]["area"];
@@ -208,11 +208,11 @@ function show_papers(data)
         $("#paper-search-result").append(
             '<div class="list-group-item text-right">'+
             '    <h4 class="list-group-item-heading">'+
-            '        <a href="'+'/redirect/?type=paper&url='+scholar_url+'" target="_blank">'+title+'</a>'+
+            '        <a href="'+'/redirect/?type=paper&url='+quoted_url+'" target="_blank">'+title+'</a>'+
             '    </h4>'+
             '    <p class="list-group-item-text">'+
-            '        期刊：'+journals.join(", ")+'<br />'+
-            '        作者：'+authors.join(", ")+'<br />'+
+            '        期刊：'+journals[0]+'<br />'+
+            '        作者：'+authors[0]+'<br />'+
             '        年份：'+year+'<br />'+
             '        引用：'+cite_num+'<br />'+
             '    </p>'+
