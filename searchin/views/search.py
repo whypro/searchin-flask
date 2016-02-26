@@ -53,15 +53,9 @@ def get_paper_search_result_json(raw_key):
     if count > current_app.config['MAX_COUNT_PER_REQ']:
         abort(400)
 
-    papers_cursor = load_papers(key, start, count)
-    total = papers_cursor.count()
-    # convert pymongo cursor to list
-    papers_list = []
-    for p in papers_cursor:
-        p['quoted_url'] = urllib.quote(p['url'])
-        papers_list.append(p)
+    papers, total = load_papers(key, start, count)
 
-    result_dict = {'key': key, 'total': total, 'start': start, 'count': len(papers_list), 'papers': papers_list}
+    result_dict = {'key': key, 'total': total, 'start': start, 'count': len(papers), 'papers': papers}
     result_json = json.dumps(result_dict, ensure_ascii=False, encoding='utf-8', cls=CJsonEncoder)
     return Response(result_json,  mimetype='application/json; charset=utf-8')
     # return jsonify(key=key, count=len(papers_list), books=papers_list)
@@ -88,6 +82,13 @@ def get_book_search_result_json(raw_key):
 
 
 def load_papers(key, start, count):
+    if False:
+        return search_papers_from_mongodb(key, start, count)
+    else:
+        return search_papers_from_baiduxueshu(key)
+
+
+def search_papers_from_mongodb(key, start, count):
     # TODO: 先排序后分页
     search_conditions = []
     for k in key.split('&'):
@@ -100,8 +101,34 @@ def load_papers(key, start, count):
         mongo.db.queries.update({'key': key}, {'$inc': {'count.paper': 1}}, upsert=True)
 
     #papers.skip(start).limit(count)
-    # print papers.count()
-    return papers
+
+    # convert pymongo cursor to list
+    papers_list = []
+    for p in papers:
+        p['quoted_url'] = urllib.quote(p['url'])
+        papers_list.append(p)
+    return papers_list, papers.count()
+
+
+import requests
+def search_papers_from_baiduxueshu(key):
+    params = {
+        'ctx_ver': 'Z39.88-2004',
+        'ctx_enc': 'info:ofi/enc:UTF-8',
+        'rft_genre': 'article',
+        'query': key,
+        'callback': 'cb',
+        'school': current_app.config['BAIDUXS_SCHOOL'],
+        'api_key': current_app.config['BAIDUXS_API_KEY'],
+        'secret_key': current_app.config['BAIDUXS_SECRET_KEY']
+    }
+    r = requests.get(current_app.config['BAIDUXS_URL'], params=params)
+    json_str = r.text[3:-1]
+    data = json.loads(json_str)
+    if data['status']:
+        return [], 0
+    else:
+        return data['data'], len(data['data'])
 
 
 def load_books(key, start, count):
@@ -128,7 +155,7 @@ def search_books_from_mongodb(key, start, count):
 def search_books_from_es(key, start, count):
     es = Elasticsearch()
     dsl_query = {"query": {"match": {"_all": {"query": key, "operator": "and"}}}}
-    res = es.search(index='searchin', doc_type=['books'], body=dsl_query)
+    res = es.search(index='searchin', doc_type=['books'], body=dsl_query, from_=start, size=count)
     total = res['hits']['total']
     books = [hit['_source'] for hit in res['hits']['hits']]
     return books, total

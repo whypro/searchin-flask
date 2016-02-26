@@ -11,12 +11,13 @@ class Config(object):
 
     # 数据库配置
     MONGO_HOST = 'localhost'
-    MONGO_PORT = 27017
+    MONGO_PORT = 28017
     MONGO_DBNAME = 'searchin'
+    # MONGO_REPLICA_SET = 'rs'
 
     # Celery
-    CELERY_BROKER_URL = 'mongodb://localhost:27017/searchin-celery'
-    CELERY_RESULT_BACKEND = 'mongodb://localhost:27017/searchin-celery'
+    CELERY_BROKER_URL = 'mongodb://localhost:28017/searchin-celery'
+    CELERY_RESULT_BACKEND = 'mongodb://localhost:28017/searchin-celery'
 
     MAX_CRAWL_PAGE = 3
 
@@ -32,4 +33,10 @@ class Config(object):
     # Elasticsearch
     ES_HOST = 'localhost'
     ES_PORT = '9200'
+
+    # Baidu Xueshu
+    BAIDUXS_URL = 'http://xueshu.baidu.com/usercenter/data/schopen'
+    BAIDUXS_SCHOOL = 'xust'
+    BAIDUXS_API_KEY = 'de910be19c'
+    BAIDUXS_SECRET_KEY = '59767b895b'
 
