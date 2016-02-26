@@ -30,12 +30,14 @@ def click_redirect():
     ip = get_client_ip()
     
     if redirect_type == 'paper':
-        paper = mongo.db.papers.find_and_modify({'url': url}, {'$inc': {'click_num': 1}, '$push': {'click_info': {'ip': ip, 'click_time': datetime.datetime.utcnow()}}})
-        if paper:
-            # print paper
-            relevancy = calculate_paper_relevancy(paper['year'], paper['cite_num'], paper['click_num'])
-            mongo.db.papers.update({'url': url}, {'$set': {'relevancy': relevancy}})
+        if url.startswith('http') and 'xueshu.baidu.com' in url:
             invalid = False
+        #paper = mongo.db.papers.find_and_modify({'url': url}, {'$inc': {'click_num': 1}, '$push': {'click_info': {'ip': ip, 'click_time': datetime.datetime.utcnow()}}})
+        #if paper:
+        #    # print paper
+        #    relevancy = calculate_paper_relevancy(paper['year'], paper['cite_num'], paper['click_num'])
+        #    mongo.db.papers.update({'url': url}, {'$set': {'relevancy': relevancy}})
+        #    invalid = False
     elif redirect_type == 'book':
         book = mongo.db.books.find_and_modify({'url': url}, {'$inc': {'click_num': 1}, '$push': {'click_info': {'ip': ip, 'click_time': datetime.datetime.utcnow()}}})
         if book:

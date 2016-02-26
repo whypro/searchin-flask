@@ -130,7 +130,7 @@ def search_papers_from_baiduxueshu(key):
     else:
         papers_list = []
         for p in data['data']:
-            p['quoted_url'] = urllib.quote(p['url'])
+            p['quoted_url'] = urllib.quote(p['scholar_url'][0])
             papers_list.append(p)
         return papers_list, len(papers_list)
 
