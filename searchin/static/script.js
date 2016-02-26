@@ -1,6 +1,6 @@
 var count_per_req = 10;
 
-
+/*
 function search_papers(key, start, count) {
     var begin = new Date();
     var get_paper_search_result_json_url = "/search/paper/json/"+key+"/?start="+start+"&count="+count;
@@ -27,14 +27,6 @@ function search_papers(key, start, count) {
             );
         }
 
-        /*
-        if (data['count'] < count) {
-            $("#paper-more-button").text("没有更多了");
-        } else {
-            $("#paper-more-button").text("加载更多");
-        }
-        */
-
         if ($("#paper-more-button").length > 0)
         {
             // 存在
@@ -57,6 +49,44 @@ function search_papers(key, start, count) {
                 search_papers(key, data["start"]+data['count'], count_per_req)
             });
         }
+    });
+}
+*/
+
+
+function search_papers(key, start, count) {
+    var begin = new Date();
+    var get_paper_search_result_json_url = "/search/paper/json/"+key+"/?start="+start+"&count="+count;
+    $.get(get_paper_search_result_json_url, function(data, status) {
+        if (status != "success") {
+            alert("文献搜索失败！")
+            return;
+        }
+
+        var end = new Date();
+        var spend = end.getTime() - begin.getTime();
+        console.log(spend);
+
+        show_papers(data);
+
+        var ts_sel = $("#paper-time-spend");
+        var content = '<p><small>在百度学术中共找到 '+data["total"]+' 条记录，耗时 '+spend+' 毫秒</small></p>';
+        if (ts_sel.length > 0)
+        {
+            ts_sel.html(content);
+        } else {
+            $("#paper-search-result").before(
+                '<div id="paper-time-spend" class="text-center">'+content+'</div>'
+            );
+        }
+
+        /*
+        if (data['count'] < count) {
+            $("#paper-more-button").text("没有更多了");
+        } else {
+            $("#paper-more-button").text("加载更多");
+        }
+        */
     });
 }
 
@@ -121,6 +151,7 @@ function search_books(key, start, count) {
 }
 
 
+/*
 function show_papers(data)
 {
     var papers = data["papers"]
@@ -150,6 +181,41 @@ function show_papers(data)
             '        年份：'+year+'<br />'+
             '        相关度：'+relevancy+'<br />'+
             '        点击量：'+click_num+
+            '    </p>'+
+            '</div>'
+        );
+    }
+}
+*/
+
+
+function show_papers(data)
+{
+    var papers = data["papers"]
+    for (var i in papers) {
+        var scholar_url = papers[i]["scholar_url"];
+        // var quoted_url = papers[i]["quoted_url"];
+        var title = papers[i]["title"][0];
+        // var key_words = papers[i]["key_words"];
+        // var area = papers[i]["area"];
+        var journals = papers[i]["publish"];
+        var authors = papers[i]["author"];
+        var year = papers[i]["year"][0];
+        var cite_num = papers[i]["cited"][0];
+        // var click_num = papers[i]["click_num"];
+        // var relevancy = papers[i]["relevancy"].toFixed(2);
+
+        $("#paper-search-result").append(
+            '<div class="list-group-item text-right">'+
+            '    <h4 class="list-group-item-heading">'+
+            '        <a href="'+'/redirect/?type=paper&url='+scholar_url+'" target="_blank">'+title+'</a>'+
+            '    </h4>'+
+            '    <p class="list-group-item-text">'+
+            '        领域：'+area+'<br />'+
+            '        期刊：'+journals.join(", ")+'<br />'+
+            '        作者：'+authors.join(", ")+'<br />'+
+            '        年份：'+year+'<br />'+
+            '        引用：'+cite_num+'<br />'+
             '    </p>'+
             '</div>'
         );
