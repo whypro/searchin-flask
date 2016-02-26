@@ -128,6 +128,7 @@ function search_books(key, start, count) {
         if ($("#book-more-button").length > 0)
         {
             // 存在
+            $("#book-more-button").text("加载更多");
             $("#book-more-button").button("reset");
             $("#book-more-button").off("click");
             $("#book-more-button").on("click", function() {
@@ -147,6 +148,12 @@ function search_books(key, start, count) {
                 search_books(key, data["start"]+data["count"], count_per_req)
             });
         }
+
+        if (data['count'] < count) {
+            $("#book-more-button").text("没有更多了");
+            $("#book-more-button").off("click");
+        }
+
     });
 }
 
