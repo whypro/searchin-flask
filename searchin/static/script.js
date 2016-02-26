@@ -211,7 +211,6 @@ function show_papers(data)
             '        <a href="'+'/redirect/?type=paper&url='+scholar_url+'" target="_blank">'+title+'</a>'+
             '    </h4>'+
             '    <p class="list-group-item-text">'+
-            '        领域：'+area+'<br />'+
             '        期刊：'+journals.join(", ")+'<br />'+
             '        作者：'+authors.join(", ")+'<br />'+
             '        年份：'+year+'<br />'+
