@@ -206,7 +206,15 @@ function show_papers(data)
         // var key_words = papers[i]["key_words"];
         // var area = papers[i]["area"];
         var journals = papers[i]["publish"];
+        var journals_fix = [];
+        for (var i in journals) {
+            journals_fix.push(journals[i][0]);
+        }
         var authors = papers[i]["author"];
+        var authors_fix = [];
+        for (var i in authors) {
+            authors_fix.push(authors[i][0]);
+        }
         var year = papers[i]["year"][0];
         var cite_num = papers[i]["cited"][0];
         // var click_num = papers[i]["click_num"];
@@ -218,8 +226,8 @@ function show_papers(data)
             '        <a href="'+'/redirect/?type=paper&url='+quoted_url+'" target="_blank">'+title+'</a>'+
             '    </h4>'+
             '    <p class="list-group-item-text">'+
-            '        期刊：'+journals[0]+'<br />'+
-            '        作者：'+authors[0]+'<br />'+
+            '        期刊：'+journals_fix[0]+'<br />'+
+            '        作者：'+authors_fix.join(', ')+'<br />'+
             '        年份：'+year+'<br />'+
             '        引用：'+cite_num+'<br />'+
             '    </p>'+
