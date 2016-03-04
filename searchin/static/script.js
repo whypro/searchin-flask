@@ -70,7 +70,7 @@ function search_papers(key, start, count) {
         show_papers(data);
 
         var ts_sel = $("#paper-time-spend");
-        var content = '<p><small>在百度学术中共找到 '+data["total"]+' 条记录，耗时 '+spend+' 毫秒</small></p>';
+        var content = '<p><small>在百度学术中共找到 '+data["total"]+' 条记录，耗时 '+spend/1000+' 秒</small></p>';
         if (ts_sel.length > 0)
         {
             ts_sel.html(content);
@@ -107,7 +107,7 @@ function search_books(key, start, count) {
         show_books(data);
 
         var ts_sel = $("#book-time-spend");
-        var content = '<p><small>共找到 '+data["total"]+' 条记录，耗时 '+spend+' 毫秒</small></p>';
+        var content = '<p><small>共找到 '+data["total"]+' 条记录，耗时 '+spend/1000+' 秒</small></p>';
         if (ts_sel.length > 0)
         {
             ts_sel.html(content);
@@ -207,13 +207,13 @@ function show_papers(data)
         // var area = papers[i]["area"];
         var journals = papers[i]["publish"];
         var journals_fix = [];
-        for (var i in journals) {
-            journals_fix.push(journals[i][0]);
+        for (var j in journals) {
+            journals_fix.push(journals[j][0]);
         }
         var authors = papers[i]["author"];
         var authors_fix = [];
-        for (var i in authors) {
-            authors_fix.push(authors[i][0]);
+        for (var j in authors) {
+            authors_fix.push(authors[j][0]);
         }
         var year = papers[i]["year"][0];
         var cite_num = papers[i]["cited"][0];
@@ -290,6 +290,10 @@ function search() {
 }
 
 
+function enable_search_button() {
+    $("#search-button").removeAttr("disabled");
+}
+
 $(document).ready(function() {
 
     $("#search-form").submit(function(e) {
@@ -303,6 +307,8 @@ $(document).ready(function() {
 
         $("#top-br").remove();
         $("#bottom-br").remove();
+        $("#search-button").attr("disabled", "disabled");
+        setTimeout("enable_search_button()", 1000*10);
         search();
     });
 

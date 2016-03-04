@@ -6,8 +6,9 @@ import datetime
 import re
 import urllib
 
-from flask import Blueprint, render_template, g, jsonify, Response, request, current_app, abort
 import pymongo
+import requests
+from flask import Blueprint, render_template, g, jsonify, Response, request, current_app, abort
 from elasticsearch import Elasticsearch
 
 from ..extensions import mongo
@@ -85,7 +86,11 @@ def load_papers(key, start, count):
     if False:
         return search_papers_from_mongodb(key, start, count)
     else:
-        return search_papers_from_baiduxueshu(key)
+        books, total = search_books_from_es(key, 0, 5)
+        papers, _ = search_papers_from_baiduxueshu(key)
+        for book in books:
+            papers += search_papers_from_baiduxueshu(book['title'])[0][1:]
+        return papers, len(papers)
 
 
 def search_papers_from_mongodb(key, start, count):
@@ -110,7 +115,6 @@ def search_papers_from_mongodb(key, start, count):
     return papers_list, papers.count()
 
 
-import requests
 def search_papers_from_baiduxueshu(key):
     params = {
         'ctx_ver': 'Z39.88-2004',
